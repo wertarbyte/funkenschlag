@@ -39,6 +39,10 @@ static uint16_t get_channel(uint8_t i) {
 	}
 }
 
+uint16_t map(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max) {
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 int main(void) {
 	/* configure PPM output port */
 	PPM_DDR |= (1<<PPM_BIT);
@@ -77,7 +81,7 @@ int main(void) {
 			ADCSRA |= (1<<ADSC);
 			/* wait for completion */
 			while (ADCSRA & (1<<ADSC)) {};
-			adc_values[adc] = ADC;
+			adc_values[adc] = map(ADC, 0, 1023, 0, 1000);
 		}
 	}
 	return 0;
