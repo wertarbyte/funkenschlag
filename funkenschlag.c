@@ -42,6 +42,7 @@ static uint16_t get_channel(uint8_t i) {
 int main(void) {
 	/* configure PPM output port */
 	PPM_DDR |= (1<<PPM_BIT);
+	PPM_PORT &= ~(1<<PPM_BIT);
 
 	/* configure ADC */
 	ADCSRA = (1<<ADEN);
@@ -61,6 +62,7 @@ int main(void) {
 
 	/* initialize channel data */
 	start_ppm_frame();
+	toggle_ppm();
 
 	/* enable interrupts */
 	sei();
