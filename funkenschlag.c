@@ -44,7 +44,7 @@ int main(void) {
 	PPM_DDR |= (1<<PPM_BIT);
 
 	/* configure ADC */
-	// TODO
+	ADCSRA = (1<<ADEN);
 
 	/* configure timer */
 
@@ -67,7 +67,16 @@ int main(void) {
 
 	while (1) {
 		/* keep sampling adc data */
-		// TODO
+		uint8_t adc = 0;
+		for (adc = 0; adc < ADC_CHANNELS; adc++) {
+			/* set input */
+			ADMUX = ( (ADMUX & 0xF0) | (0x0F & adc) );
+			/* start conversion */
+			ADCSRA |= (1<<ADSC);
+			/* wait for completion */
+			while (ADCSRA & (1<<ADSC)) {};
+			adc_values[adc] = ADC;
+		}
 	}
 	return 0;
 }
