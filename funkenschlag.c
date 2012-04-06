@@ -16,14 +16,19 @@
 #define FRAME_MS 20000L
 #define STOP_MS  300
 
-static uint8_t current_channel = 0;
 
 static uint16_t adc_values[ADC_CHANNELS] = {0};
 
-static uint16_t frame_time_remaining = 2*FRAME_MS;
+static uint8_t current_channel;
+static uint16_t frame_time_remaining;
 
-static inline void toggle_ppm(void) {
+static void toggle_ppm(void) {
 	PPM_PIN |= (1<<PPM_BIT);
+}
+
+static void start_ppm_frame(void) {
+	frame_time_remaining = FRAME_MS*2;
+	current_channel = 0;
 }
 
 static uint16_t get_channel(uint8_t i) {
@@ -54,6 +59,9 @@ int main(void) {
 	/* set Timer 1 to clk/8, giving us ticks of 1/2 µs */
 	TCCR1B |= (1<<CS11);
 
+	/* initialize channel data */
+	start_ppm_frame();
+
 	/* enable interrupts */
 	sei();
 
@@ -81,7 +89,6 @@ ISR(TIMER1_COMPB_vect) {
 	} else {
 		/* we already transmitted the last channel, only wait for the frame to finish */
 		OCR1A = frame_time_remaining;
-		current_channel = 0;
-		frame_time_remaining = 2*FRAME_MS;
+		start_ppm_frame();
 	}
 }
