@@ -17,6 +17,13 @@
 #define STOP_MS  300
 
 
+static uint8_t adc_inputs[ADC_CHANNELS] = {
+	0,
+	1,
+	2,
+	3,
+};
+
 static uint16_t adc_values[ADC_CHANNELS] = {0};
 
 static uint8_t current_channel;
@@ -76,7 +83,7 @@ int main(void) {
 		uint8_t adc = 0;
 		for (adc = 0; adc < ADC_CHANNELS; adc++) {
 			/* set input */
-			ADMUX = ( (ADMUX & 0xF0) | (0x0F & adc) );
+			ADMUX = ( (ADMUX & 0xF0) | (0x0F & adc_inputs[adc]) );
 			/* start conversion */
 			ADCSRA |= (1<<ADSC);
 			/* wait for completion */
