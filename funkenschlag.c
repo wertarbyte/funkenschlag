@@ -29,8 +29,12 @@ static uint16_t adc_values[ADC_CHANNELS] = {0};
 static uint8_t current_channel;
 static uint16_t frame_time_remaining;
 
-static void toggle_ppm(void) {
-	PPM_PIN |= (1<<PPM_BIT);
+static void set_ppm(uint8_t h) {
+	if (h) {
+		PPM_PORT |= 1<<PPM_BIT;
+	} else {
+		PPM_PORT &= ~(1<<PPM_BIT);
+	}
 }
 
 static void start_ppm_frame(void) {
@@ -73,7 +77,7 @@ int main(void) {
 
 	/* initialize channel data */
 	start_ppm_frame();
-	toggle_ppm();
+	set_ppm(1);
 
 	/* enable interrupts */
 	sei();
@@ -96,12 +100,12 @@ int main(void) {
 
 /* the timer has reached OCR1A, so the current PPM pulse has been completed */
 ISR(TIMER1_COMPA_vect) {
-	toggle_ppm();
+	set_ppm(1);
 }
 
 /* finished sending the stop pulse */
 ISR(TIMER1_COMPB_vect) {
-	toggle_ppm();
+	set_ppm(0);
 	if (current_channel < N_CHANNELS) {
 		/* get the pulse width for the current channel */
 		uint16_t timeout = 2*(get_channel(current_channel)+1000);
