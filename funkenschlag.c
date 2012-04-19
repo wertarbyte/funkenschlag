@@ -68,7 +68,7 @@ int main(void) {
 	TCCR1B |= (1<<WGM12);
 	/* enable compare interrupts */
 	TIMSK = (1<<OCIE1B | 1<<OCIE1A);
-	/* set compare value for the stop pulese to 300µs */
+	/* set compare value for the stop pulse to 300µs */
 	OCR1B = STOP_MS*2;
 	/* set pulse width to max for now */
 	OCR1A = ~0;
