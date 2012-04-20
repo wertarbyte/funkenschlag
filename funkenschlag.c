@@ -24,6 +24,8 @@ static uint8_t adc_inputs[ADC_CHANNELS] = {
 	3,
 };
 
+static uint8_t adc_invert[(ADC_CHANNELS+7)/8] = { 0 };
+
 static uint16_t adc_values[ADC_CHANNELS] = {0};
 
 static uint8_t current_channel;
@@ -92,7 +94,12 @@ int main(void) {
 			ADCSRA |= (1<<ADSC);
 			/* wait for completion */
 			while (ADCSRA & (1<<ADSC)) {};
-			adc_values[adc] = map(ADC, 0, 1023, 0, 1000);
+			uint16_t val = map(ADC, 0, 1023, 0, 1000);
+			/* is this axis inverted? */
+			if (adc_invert[adc/(8*sizeof(*adc_invert))] & 1<<(adc%(8*sizeof(*adc_invert)))) {
+				val = 1000-val;
+			}
+			adc_values[adc] = val;
 		}
 	}
 	return 0;
