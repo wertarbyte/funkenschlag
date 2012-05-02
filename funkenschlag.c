@@ -7,6 +7,7 @@
 
 #define N_CHANNELS 6
 #define ADC_CHANNELS 4
+#define SW_CHANNELS 2
 
 #define PPM_DDR  DDRB
 #define PPM_PORT PORTB
@@ -26,7 +27,21 @@ static uint8_t adc_inputs[ADC_CHANNELS] = {
 
 static uint8_t adc_invert[(ADC_CHANNELS+7)/8] = { 0 };
 
+/* we are using switches with 3 positions (neutral, up, down),
+ * so each switch uses two digital input pins
+ */
+static struct {
+	volatile uint8_t *pin;
+	volatile uint8_t *port;
+	uint8_t up;
+	uint8_t down;
+} sw_inputs[SW_CHANNELS] = {
+	{ &PINB, &PORTB, PB6, PB7 },
+	{ &PIND, &PORTD, PD6, PD7 },
+};
+
 static uint16_t adc_values[ADC_CHANNELS] = {0};
+static uint16_t sw_values[SW_CHANNELS] = {0};
 
 static uint8_t current_channel;
 static uint16_t frame_time_remaining;
@@ -47,6 +62,8 @@ static void start_ppm_frame(void) {
 static uint16_t get_channel(uint8_t i) {
 	if (i < ADC_CHANNELS) {
 		return adc_values[i];
+	} else if (i < ADC_CHANNELS+SW_CHANNELS) {
+		return sw_values[i-ADC_CHANNELS];
 	} else {
 		return 0;
 	}
@@ -60,6 +77,12 @@ int main(void) {
 	/* configure PPM output port */
 	PPM_DDR |= (1<<PPM_BIT);
 	PPM_PORT &= ~(1<<PPM_BIT);
+
+	/* enable pull-up resistors for switches */
+	for (uint8_t sw = 0; sw < SW_CHANNELS; sw++) {
+		*sw_inputs[sw].port |= 1<<sw_inputs[sw].up;
+		*sw_inputs[sw].port |= 1<<sw_inputs[sw].down;
+	}
 
 	/* configure ADC */
 	ADCSRA = (1<<ADEN);
@@ -100,6 +123,12 @@ int main(void) {
 				val = 1000-val;
 			}
 			adc_values[adc] = val;
+		}
+		/* query switches */
+		for (uint8_t sw = 0; sw < SW_CHANNELS; sw++) {
+			uint8_t up = !!(~(*sw_inputs[sw].pin) & 1<<sw_inputs[sw].up);
+			uint8_t down = !!(~(*sw_inputs[sw].pin) & 1<<sw_inputs[sw].down);
+			sw_values[sw] = 500+(up*500)-(down*500);
 		}
 	}
 	return 0;
