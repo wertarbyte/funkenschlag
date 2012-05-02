@@ -27,6 +27,8 @@ static uint8_t adc_inputs[ADC_CHANNELS] = {
 
 static uint8_t adc_invert[(ADC_CHANNELS+7)/8] = { 0 };
 
+static int16_t adc_trim[ADC_CHANNELS] = {0};
+
 /* we are using switches with 3 positions (neutral, up, down),
  * so each switch uses two digital input pins
  */
@@ -117,6 +119,7 @@ int main(void) {
 			/* wait for completion */
 			while (ADCSRA & (1<<ADSC)) {};
 			uint16_t val = map(ADC, 0, 1023, 0, 1000);
+			val += adc_trim[adc];
 			/* is this axis inverted? */
 			if (adc_invert[adc/(8*sizeof(*adc_invert))] & 1<<(adc%(8*sizeof(*adc_invert)))) {
 				val = 1000-val;
