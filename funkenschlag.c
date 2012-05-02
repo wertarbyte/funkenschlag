@@ -109,8 +109,7 @@ int main(void) {
 
 	while (1) {
 		/* keep sampling adc data */
-		uint8_t adc = 0;
-		for (adc = 0; adc < ADC_CHANNELS; adc++) {
+		for (uint8_t adc = 0; adc < ADC_CHANNELS; adc++) {
 			/* set input */
 			ADMUX = ( (ADMUX & 0xF0) | (0x0F & adc_inputs[adc]) );
 			/* start conversion */
