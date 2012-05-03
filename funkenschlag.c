@@ -87,7 +87,8 @@ int main(void) {
 	}
 
 	/* configure ADC */
-	ADCSRA = (1<<ADEN);
+	ADCSRA = (1<<ADEN | 1<<ADPS2 | 1<<ADPS1 | 0<<ADPS0);
+	ADMUX = (1<<REFS0);
 
 	/* configure timer */
 
