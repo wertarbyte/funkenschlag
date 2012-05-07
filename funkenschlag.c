@@ -15,7 +15,7 @@
 #define PPM_BIT  PB0
 
 #define FRAME_MS 20000L
-#define STOP_MS  300
+#define STOP_MS  500
 
 
 static uint8_t adc_inputs[ADC_CHANNELS] = {
@@ -47,6 +47,7 @@ static uint16_t sw_values[SW_CHANNELS] = {0};
 
 static uint8_t current_channel;
 static uint16_t frame_time_remaining;
+static uint16_t frame_times[N_CHANNELS];
 
 static void set_ppm(uint8_t h) {
 	if (h) {
@@ -56,11 +57,6 @@ static void set_ppm(uint8_t h) {
 	}
 }
 
-static void start_ppm_frame(void) {
-	frame_time_remaining = FRAME_MS*2;
-	current_channel = 0;
-}
-
 static uint16_t get_channel(uint8_t i) {
 	if (i < ADC_CHANNELS) {
 		return adc_values[i];
@@ -68,6 +64,15 @@ static uint16_t get_channel(uint8_t i) {
 		return sw_values[i-ADC_CHANNELS];
 	} else {
 		return 0;
+	}
+}
+
+static void start_ppm_frame(void) {
+	current_channel = 0;
+	frame_time_remaining = FRAME_MS*2;
+	for (uint8_t i=0; i<N_CHANNELS; i++) {
+		frame_times[i] = 2*(1000+get_channel(i));
+		//frame_time_remaining -= frame_times[i];
 	}
 }
 
@@ -143,9 +148,7 @@ ISR(TIMER1_COMPB_vect) {
 	set_ppm(0);
 	if (current_channel < N_CHANNELS) {
 		/* get the pulse width for the current channel */
-		uint16_t timeout = 2*(get_channel(current_channel)+1000);
-		OCR1A = timeout;
-		frame_time_remaining -= timeout;
+		OCR1A = frame_times[current_channel];
 		current_channel++;
 	} else {
 		/* we already transmitted the last channel, only wait for the frame to finish */
