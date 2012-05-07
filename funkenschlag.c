@@ -14,8 +14,8 @@
 #define PPM_PIN  PINB
 #define PPM_BIT  PB0
 
-#define FRAME_MS 20000L
-#define STOP_MS  500
+#define FRAME_US 20000L
+#define STOP_US 500
 
 
 static uint8_t adc_inputs[ADC_CHANNELS] = {
@@ -46,8 +46,8 @@ static uint16_t adc_values[ADC_CHANNELS] = {0};
 static uint16_t sw_values[SW_CHANNELS] = {0};
 
 static uint8_t current_channel;
-static uint16_t frame_time_remaining;
-static uint16_t frame_times[N_CHANNELS];
+static uint16_t frame_time_remaining = 0;
+static uint16_t frame_times[N_CHANNELS] = {0};
 
 static void set_ppm(uint8_t h) {
 	if (h) {
@@ -69,10 +69,22 @@ static uint16_t get_channel(uint8_t i) {
 
 static void start_ppm_frame(void) {
 	current_channel = 0;
-	frame_time_remaining = FRAME_MS*2;
+	frame_time_remaining = FRAME_US;
 	for (uint8_t i=0; i<N_CHANNELS; i++) {
-		frame_times[i] = 2*(1000+get_channel(i));
-		//frame_time_remaining -= frame_times[i];
+		frame_times[i] = (1000+get_channel(i));
+		frame_time_remaining -= frame_times[i];
+	}
+}
+
+static void start_ppm_pulse(void) {
+	if (current_channel < N_CHANNELS) {
+		/* get the pulse width for the current channel */
+		OCR1A = frame_times[current_channel];
+		current_channel++;
+	} else {
+		/* we already transmitted the last channel, only wait for the frame to finish */
+		OCR1A = frame_time_remaining;
+		start_ppm_frame();
 	}
 }
 
@@ -98,15 +110,16 @@ int main(void) {
 	/* enable compare interrupts */
 	TIMSK = (1<<OCIE1B | 1<<OCIE1A);
 	/* set compare value for the stop pulse to 300µs */
-	OCR1B = STOP_MS*2;
+	OCR1B = STOP_US;
 	/* set pulse width to max for now */
 	OCR1A = ~0;
-	/* set Timer 1 to clk/8, giving us ticks of 1/2 µs */
+	/* set Timer 1 to clk/8, giving us ticks of 1 µs */
 	TCCR1B |= (1<<CS11);
 
 	/* initialize channel data */
 	start_ppm_frame();
 	set_ppm(1);
+	start_ppm_pulse();
 
 	/* enable interrupts */
 	sei();
@@ -141,18 +154,10 @@ int main(void) {
 /* the timer has reached OCR1A, so the current PPM pulse has been completed */
 ISR(TIMER1_COMPA_vect) {
 	set_ppm(1);
+	start_ppm_pulse();
 }
 
 /* finished sending the stop pulse */
 ISR(TIMER1_COMPB_vect) {
 	set_ppm(0);
-	if (current_channel < N_CHANNELS) {
-		/* get the pulse width for the current channel */
-		OCR1A = frame_times[current_channel];
-		current_channel++;
-	} else {
-		/* we already transmitted the last channel, only wait for the frame to finish */
-		OCR1A = frame_time_remaining;
-		start_ppm_frame();
-	}
 }
