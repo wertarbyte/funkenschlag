@@ -30,9 +30,15 @@ static int16_t trim[N_CHANNELS] = {
 	[0] = -10,
 	[1] = 40,
 	[2] = 0,
-	[3] = 20,
+	[3] = 15,
 	[4] = 25,
 	[5] = 25
+};
+static int8_t scale[N_CHANNELS] = {
+	[0] = 50,
+	[1] = 40,
+	[2] = 25,
+	[3] = 25,
 };
 
 /* we are using switches with 3 positions (neutral, up, down),
@@ -64,13 +70,22 @@ static void set_ppm(uint8_t h) {
 }
 
 static uint16_t get_channel(uint8_t i) {
+	uint16_t val = 0;
 	if (i < ADC_CHANNELS) {
-		return adc_values[i]+trim[i];
+		val = adc_values[i];
 	} else if (i < ADC_CHANNELS+SW_CHANNELS) {
-		return sw_values[i-ADC_CHANNELS]+trim[i];
+		val = sw_values[i-ADC_CHANNELS];
 	} else {
 		return 0;
 	}
+	/* adjust the channel value */
+	val += trim[i];
+	if (scale[i]) {
+		int32_t d = (int32_t)1023/2 - val;
+		int32_t nd = (d*(100+scale[i])/(100));
+		val = 1023/2 - nd;
+	}
+	return val;
 }
 
 static void start_ppm_frame(void) {
