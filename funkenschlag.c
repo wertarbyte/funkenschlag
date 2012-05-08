@@ -94,6 +94,22 @@ static void start_ppm_pulse(void) {
 	}
 }
 
+static uint16_t read_adc(uint8_t adc) {
+	uint16_t result = 0;
+#define ADC_READS 8
+	uint8_t reads = ADC_READS;
+	while (reads--) {
+		/* set input */
+		ADMUX = ( (ADMUX & 0xF0) | (0x0F & adc_inputs[adc]) );
+		/* start conversion */
+		ADCSRA |= (1<<ADSC);
+		/* wait for completion */
+		while (ADCSRA & (1<<ADSC)) {};
+		result += ADC;
+	}
+	return result/ADC_READS;
+}
+
 int main(void) {
 	/* configure PPM output port */
 	PPM_DDR |= (1<<PPM_BIT);
@@ -136,13 +152,7 @@ int main(void) {
 	while (1) {
 		/* keep sampling adc data */
 		for (uint8_t adc = 0; adc < ADC_CHANNELS; adc++) {
-			/* set input */
-			ADMUX = ( (ADMUX & 0xF0) | (0x0F & adc_inputs[adc]) );
-			/* start conversion */
-			ADCSRA |= (1<<ADSC);
-			/* wait for completion */
-			while (ADCSRA & (1<<ADSC)) {};
-			uint16_t val = ADC;
+			uint16_t val = read_adc(adc);
 			/* is this axis inverted? */
 			if (adc_invert[adc/(8*sizeof(*adc_invert))] & 1<<(adc%(8*sizeof(*adc_invert)))) {
 				val = 1023-val;
