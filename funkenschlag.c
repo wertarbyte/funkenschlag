@@ -17,7 +17,6 @@
 #define FRAME_US 20000L
 #define STOP_US 500
 
-
 static uint8_t adc_inputs[ADC_CHANNELS] = {
 	0,
 	1,
@@ -27,7 +26,14 @@ static uint8_t adc_inputs[ADC_CHANNELS] = {
 
 static uint8_t adc_invert[(ADC_CHANNELS+7)/8] = { 0 };
 
-static int16_t adc_trim[ADC_CHANNELS] = {0};
+static int16_t trim[N_CHANNELS] = {
+	[0] = -10,
+	[1] = 40,
+	[2] = 0,
+	[3] = 20,
+	[4] = 25,
+	[5] = 25
+};
 
 /* we are using switches with 3 positions (neutral, up, down),
  * so each switch uses two digital input pins
@@ -59,9 +65,9 @@ static void set_ppm(uint8_t h) {
 
 static uint16_t get_channel(uint8_t i) {
 	if (i < ADC_CHANNELS) {
-		return adc_values[i];
+		return adc_values[i]+trim[i];
 	} else if (i < ADC_CHANNELS+SW_CHANNELS) {
-		return sw_values[i-ADC_CHANNELS];
+		return sw_values[i-ADC_CHANNELS]+trim[i];
 	} else {
 		return 0;
 	}
@@ -124,6 +130,9 @@ int main(void) {
 	/* enable interrupts */
 	sei();
 
+	/* mark roll axis as inverted */
+	adc_invert[0] |= 1<<0;
+
 	while (1) {
 		/* keep sampling adc data */
 		for (uint8_t adc = 0; adc < ADC_CHANNELS; adc++) {
@@ -134,10 +143,9 @@ int main(void) {
 			/* wait for completion */
 			while (ADCSRA & (1<<ADSC)) {};
 			uint16_t val = ADC;
-			val += adc_trim[adc];
 			/* is this axis inverted? */
 			if (adc_invert[adc/(8*sizeof(*adc_invert))] & 1<<(adc%(8*sizeof(*adc_invert)))) {
-				val = 1000-val;
+				val = 1023-val;
 			}
 			adc_values[adc] = val;
 		}
