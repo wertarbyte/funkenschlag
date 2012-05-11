@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
+#include <avr/wdt.h>
 #include <util/delay.h>
 
 #define N_CHANNELS 6
@@ -158,6 +159,9 @@ int main(void) {
 	ADCSRA = (1<<ADEN | 1<<ADPS2 | 1<<ADPS1 | 0<<ADPS0);
 	ADMUX = (1<<REFS0);
 
+	/* configure watchfog timer to reset after 60ms */
+	wdt_enable(WDTO_60MS);
+
 	/* configure timer */
 
 	/* enable CTC waveform generation (TOP == OCR1A) */
@@ -183,6 +187,9 @@ int main(void) {
 	adc_invert[0] |= 1<<0;
 
 	while (1) {
+		/* reset watchdog */
+		wdt_reset();
+
 		/* keep sampling adc data */
 		for (uint8_t adc = 0; adc < ADC_CHANNELS; adc++) {
 			uint16_t val = read_adc(adc);
