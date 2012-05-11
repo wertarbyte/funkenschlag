@@ -14,6 +14,11 @@
 #define PPM_PIN  PINB
 #define PPM_BIT  PB0
 
+#define LED_DDR  DDRB
+#define LED_PORT PORTB
+#define LED_PIN  PINB
+#define LED_BIT  PB5
+
 #define FRAME_US 20000L
 #define STOP_US 500
 
@@ -129,6 +134,10 @@ int main(void) {
 	/* configure PPM output port */
 	PPM_DDR |= (1<<PPM_BIT);
 	PPM_PORT &= ~(1<<PPM_BIT);
+
+	/* configure LED output port */
+	LED_DDR |= (1<<LED_BIT);
+	LED_PORT |= (1<<LED_BIT);
 
 	/* enable pull-up resistors for switches */
 	for (uint8_t sw = 0; sw < SW_CHANNELS; sw++) {
