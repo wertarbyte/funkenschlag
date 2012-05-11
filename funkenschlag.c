@@ -19,6 +19,11 @@
 #define LED_PIN  PINB
 #define LED_BIT  PB5
 
+#define VOL_DDR  DDRB
+#define VOL_PORT PORTB
+#define VOL_PIN  PINB
+#define VOL_BIT  PB1
+
 #define FRAME_US 20000L
 #define STOP_US 500
 
@@ -139,6 +144,10 @@ int main(void) {
 	LED_DDR |= (1<<LED_BIT);
 	LED_PORT |= (1<<LED_BIT);
 
+	/* configure VOL(tage) warning port */
+	VOL_DDR &= ~(1<<VOL_BIT);
+	VOL_PORT |= (1<<VOL_BIT); // enable pullup
+
 	/* enable pull-up resistors for switches */
 	for (uint8_t sw = 0; sw < SW_CHANNELS; sw++) {
 		*sw_inputs[sw].port |= 1<<sw_inputs[sw].up;
@@ -188,6 +197,14 @@ int main(void) {
 			uint8_t up = !!(~(*sw_inputs[sw].pin) & 1<<sw_inputs[sw].up);
 			uint8_t down = !!(~(*sw_inputs[sw].pin) & 1<<sw_inputs[sw].down);
 			sw_values[sw] = 500+(up*500)-(down*500);
+		}
+		/* check voltage */
+		if ((~VOL_PIN) & 1<<VOL_BIT) {
+			// everything OK
+			LED_PORT |= (1<<LED_BIT);
+		} else {
+			// voltage dropped, alert the user!
+			LED_PORT &= ~(1<<LED_BIT);
 		}
 	}
 	return 0;
