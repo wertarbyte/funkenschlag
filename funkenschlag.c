@@ -25,6 +25,12 @@
 #define VOL_PIN  PINB
 #define VOL_BIT  PB1
 
+/* switch multiplexing */
+#define MPX_DDR  DDRB
+#define MPX_PORT PORTB
+#define MPX_PIN  PINB
+#define MPX_BIT  PB2
+
 #define FRAME_US 20000L
 #define STOP_US 500
 
@@ -58,11 +64,10 @@ static int8_t scale[N_CHANNELS] = {
 static struct {
 	volatile uint8_t *pin;
 	volatile uint8_t *port;
-	uint8_t up;
-	uint8_t down;
+	uint8_t bit;
 } sw_inputs[SW_CHANNELS] = {
-	{ &PINB, &PORTB, PB6, PB7 },
-	{ &PIND, &PORTD, PD6, PD7 },
+	{ &PIND, &PORTD, PD7 },
+	{ &PIND, &PORTD, PD6 },
 };
 
 static uint16_t adc_values[ADC_CHANNELS] = {0};
@@ -152,10 +157,11 @@ int main(void) {
 	VOL_DDR &= ~(1<<VOL_BIT);
 	VOL_PORT |= (1<<VOL_BIT); // enable pullup
 
+	MPX_DDR |= 1<<MPX_BIT;
+
 	/* enable pull-up resistors for switches */
 	for (uint8_t sw = 0; sw < SW_CHANNELS; sw++) {
-		*sw_inputs[sw].port |= 1<<sw_inputs[sw].up;
-		*sw_inputs[sw].port |= 1<<sw_inputs[sw].down;
+		*sw_inputs[sw].port |= 1<<sw_inputs[sw].bit;
 	}
 
 	/* configure ADC */
@@ -209,8 +215,17 @@ int main(void) {
 		}
 		/* query switches */
 		for (uint8_t sw = 0; sw < SW_CHANNELS; sw++) {
-			uint8_t up = !!(~(*sw_inputs[sw].pin) & 1<<sw_inputs[sw].up);
-			uint8_t down = !!(~(*sw_inputs[sw].pin) & 1<<sw_inputs[sw].down);
+			/* check with multiplexing on high wire */
+			MPX_PORT &= ~(1<<MPX_BIT);
+			/* give the wires some time */
+			_delay_us(10);
+			uint8_t up = !!(~(*sw_inputs[sw].pin) & 1<<sw_inputs[sw].bit);
+			/* check with multiplexing on low wire */
+			MPX_PORT |= 1<<MPX_BIT;
+			/* give the wires some time */
+			_delay_us(10);
+			//uint8_t down = 0;
+			uint8_t down = !!(~(*sw_inputs[sw].pin) & 1<<sw_inputs[sw].bit);
 			sw_values[sw] = 500+(up*500)-(down*500);
 		}
 		/* check voltage */
