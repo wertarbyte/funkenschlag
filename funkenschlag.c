@@ -5,10 +5,13 @@
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 #include <util/delay.h>
+#include "datenschlag.h"
 
 #define N_CHANNELS 6
 #define ADC_CHANNELS 4
-#define SW_CHANNELS 2
+#define SW_CHANNELS 1
+
+#define DS_CHANNEL 6
 
 #define PPM_DDR  DDRB
 #define PPM_PORT PORTB
@@ -67,7 +70,7 @@ static struct {
 	uint8_t bit;
 } sw_inputs[SW_CHANNELS] = {
 	{ &PIND, &PORTD, PD7 },
-	{ &PIND, &PORTD, PD6 },
+//	{ &PIND, &PORTD, PD6 },
 };
 
 static uint16_t adc_values[ADC_CHANNELS] = {0};
@@ -94,6 +97,20 @@ static uint16_t get_channel(uint8_t i) {
 		val = adc_values[i];
 	} else if (i < ADC_CHANNELS+SW_CHANNELS) {
 		val = sw_values[i-ADC_CHANNELS];
+	} else if (i == DS_CHANNEL) {
+		uint8_t v = 0;
+		uint8_t r = ds_next_byte(&v);
+		/* calibration pulses before a frame */
+		if (r == -2) {
+			return 0;
+		} else if (r == -1) {
+			return 1023;
+		} else if (r) {
+			/* transmit the binary value of v */
+			return ((uint32_t)1023*(v+1)/(255+2));
+		} else {
+			return 0;
+		}
 	} else {
 		return 0;
 	}
@@ -241,6 +258,9 @@ int main(void) {
 			}
 
 		}
+		/* queue datenschlag frame */
+		uint8_t flash_seq = (1<<0 | 1<<2);
+		ds_add_frame(0x1E, &flash_seq, 1);
 	}
 	return 0;
 }
