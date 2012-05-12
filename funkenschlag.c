@@ -72,6 +72,9 @@ static uint8_t current_channel;
 static uint16_t frame_time_remaining = 0;
 static uint16_t frame_times[N_CHANNELS] = {0};
 
+/* milliseconds since startup */
+static volatile uint32_t millis = 0;
+
 static void set_ppm(uint8_t h) {
 	if (h) {
 		PPM_PORT |= 1<<PPM_BIT;
@@ -164,16 +167,21 @@ int main(void) {
 
 	/* configure timer */
 
+	/* Timer 2 generates overflows at 1kHz */
+	TCCR2 = (1<<WGM21 | 1<<CS22);
+	OCR2 = 0x7D;
+
 	/* enable CTC waveform generation (TOP == OCR1A) */
 	TCCR1B |= (1<<WGM12);
-	/* enable compare interrupts */
-	TIMSK = (1<<OCIE1B | 1<<OCIE1A);
 	/* set compare value for the stop pulse to 300µs */
 	OCR1B = STOP_US;
 	/* set pulse width to max for now */
 	OCR1A = ~0;
 	/* set Timer 1 to clk/8, giving us ticks of 1 µs */
 	TCCR1B |= (1<<CS11);
+
+	/* enable compare and overflow interrupts */
+	TIMSK = (1<<OCIE2 | 1<<OCIE1B | 1<<OCIE1A);
 
 	/* initialize channel data */
 	start_ppm_frame();
@@ -211,10 +219,20 @@ int main(void) {
 			LED_PORT |= (1<<LED_BIT);
 		} else {
 			// voltage dropped, alert the user!
-			LED_PORT &= ~(1<<LED_BIT);
+			if (millis/250 % 2) {
+				LED_PORT |= (1<<LED_BIT);
+			} else {
+				LED_PORT &= ~(1<<LED_BIT);
+			}
+
 		}
 	}
 	return 0;
+}
+
+/* 1ms has passed, increment the counter */
+ISR(TIMER2_COMP_vect) {
+	millis++;
 }
 
 /* the timer has reached OCR1A, so the current PPM pulse has been completed */
