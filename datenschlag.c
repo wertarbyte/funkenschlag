@@ -41,7 +41,7 @@ uint8_t ds_add_frame(uint8_t cmd, uint8_t *payload, uint8_t size) {
 	return 1;
 }
 
-int8_t ds_get_next_byte(uint8_t *dst) {
+int8_t ds_get_next_nibble(uint8_t *dst) {
 	static int8_t i = -2;
 
 	/* nothing to send? */
@@ -57,12 +57,17 @@ int8_t ds_get_next_byte(uint8_t *dst) {
 	struct ds_frame *f = &tx_buffer[tx_buffer_start];
 	uint8_t *b = (uint8_t*) f;
 	/* select the n'th byte out of our frame struct */
-	if (i < sizeof(*f)) {
-		*dst = b[i];
+	if (i < 2*sizeof(*f)) {
+		if (i%2) {
+			*dst = b[i/2] >> 4;
+		} else {
+			*dst = b[i/2] & 0x0F;
+		}
+		*dst = 0x0F;
 		i++;
 	}
 	/* end of frame reached */
-	if (i == sizeof(*f)) {
+	if (i > 2*sizeof(*f)) {
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 			/* we consumed one frame */
 			tx_buffer_items--;

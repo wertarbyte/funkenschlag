@@ -99,7 +99,7 @@ static uint16_t get_channel(uint8_t i) {
 		val = sw_values[i-ADC_CHANNELS];
 	} else if (i == DS_CHANNEL-1) {
 		uint8_t v = 0;
-		uint8_t r = ds_get_next_byte(&v);
+		uint8_t r = ds_get_next_nibble(&v);
 		/* calibration pulses before a frame */
 		if (r < -64) {
 			val = 0;
@@ -107,7 +107,7 @@ static uint16_t get_channel(uint8_t i) {
 			val = 1023;
 		} else if (r) {
 			/* transmit the binary value of v */
-			val = ((uint32_t)1023*(v+1)/(255+2));
+			val = ((uint32_t)1023*(v+1))/(0x0F+2);
 		} else {
 			val = 0;
 		}
