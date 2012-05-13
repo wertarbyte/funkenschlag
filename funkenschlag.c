@@ -97,19 +97,19 @@ static uint16_t get_channel(uint8_t i) {
 		val = adc_values[i];
 	} else if (i < ADC_CHANNELS+SW_CHANNELS) {
 		val = sw_values[i-ADC_CHANNELS];
-	} else if (i == DS_CHANNEL) {
+	} else if (i == DS_CHANNEL-1) {
 		uint8_t v = 0;
-		uint8_t r = ds_next_byte(&v);
+		uint8_t r = ds_get_next_byte(&v);
 		/* calibration pulses before a frame */
-		if (r == -2) {
-			return 0;
-		} else if (r == -1) {
-			return 1023;
+		if (r < -64) {
+			val = 0;
+		} else if (r < 0) {
+			val = 1023;
 		} else if (r) {
 			/* transmit the binary value of v */
-			return ((uint32_t)1023*(v+1)/(255+2));
+			val = ((uint32_t)1023*(v+1)/(255+2));
 		} else {
-			return 0;
+			val = 0;
 		}
 	} else {
 		return 0;
@@ -180,6 +180,7 @@ int main(void) {
 	for (uint8_t sw = 0; sw < SW_CHANNELS; sw++) {
 		*sw_inputs[sw].port |= 1<<sw_inputs[sw].bit;
 	}
+	PORTD |= 1<<PD6;
 
 	/* configure ADC */
 	ADCSRA = (1<<ADEN | 1<<ADPS2 | 1<<ADPS1 | 0<<ADPS0);
@@ -258,9 +259,19 @@ int main(void) {
 			}
 
 		}
+
+		uint8_t ds_payload[4];
+		memset(&ds_payload[0], 0xFF, 4);
+		/* check switch for Datenschlag */
+		MPX_PORT &= ~(1<<MPX_BIT);
+		_delay_us(10);
+		if (~PORTD & 1<<PD6) {
+			ds_payload[0] = 0;
+		}
 		/* queue datenschlag frame */
-		uint8_t flash_seq = (1<<0 | 1<<2);
-		ds_add_frame(0x1E, &flash_seq, 1);
+		if (ds_frame_buffers_available()) {
+			ds_add_frame(0xDE, &ds_payload[0], 4);
+		}
 	}
 	return 0;
 }
