@@ -1,17 +1,19 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 #include <util/delay.h>
 #include "datenschlag.h"
+#include "datenschlag_structs.h"
 
 #define N_CHANNELS 6
 #define ADC_CHANNELS 4
 #define SW_CHANNELS 1
 
-#define DS_CHANNEL 6
+#define DS_CHANNEL 5
 
 #define PPM_DDR  DDRB
 #define PPM_PORT PORTB
@@ -52,13 +54,14 @@ static int16_t trim[N_CHANNELS] = {
 	[2] = 0,
 	[3] = 15,
 	[4] = 25,
-	[5] = 25
+	[5] = 0,
 };
 static int8_t scale[N_CHANNELS] = {
 	[0] = 50,
 	[1] = 40,
 	[2] = 25,
 	[3] = 25,
+	[5] = 0,
 };
 
 /* we are using switches with 3 positions (neutral, up, down),
@@ -97,20 +100,8 @@ static uint16_t get_channel(uint8_t i) {
 		val = adc_values[i];
 	} else if (i < ADC_CHANNELS+SW_CHANNELS) {
 		val = sw_values[i-ADC_CHANNELS];
-	} else if (i == DS_CHANNEL-1) {
-		uint8_t v = 0;
-		uint8_t r = ds_get_next_nibble(&v);
-		/* calibration pulses before a frame */
-		if (r < -64) {
-			val = 0;
-		} else if (r < 0) {
-			val = 1023;
-		} else if (r) {
-			/* transmit the binary value of v */
-			val = ((uint32_t)1023*(v+1))/(0x0F+2);
-		} else {
-			val = 0;
-		}
+	} else if (i == DS_CHANNEL) {
+		val = ds_get_next_pulse();
 	} else {
 		return 0;
 	}
@@ -260,14 +251,12 @@ int main(void) {
 
 		}
 
-		uint8_t ds_payload[4];
-		memset(&ds_payload[0], 0xFF, 4);
-		/* check switch for Datenschlag */
 		MPX_PORT &= ~(1<<MPX_BIT);
 		_delay_us(10);
-		if (~PORTD & 1<<PD6) {
-			ds_payload[0] = 0;
-		}
+		uint8_t ds_payload[DS_PAYLOAD_LENGTH];
+		uint8_t payload = (~PIND & 1<<PD6) ? 0xFF : 0x00;
+		memset(&ds_payload[0], payload, DS_PAYLOAD_LENGTH);
+		/* check switch for Datenschlag */
 		/* queue datenschlag frame */
 		if (ds_frame_buffers_available()) {
 			ds_add_frame(0xDE, &ds_payload[0], 4);

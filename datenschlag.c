@@ -5,7 +5,7 @@
 #include "datenschlag.h"
 #include "datenschlag_structs.h"
 
-#define DS_TX_BUFFER_SIZE 5
+#define DS_TX_BUFFER_SIZE 1
 
 static struct ds_frame tx_buffer[DS_TX_BUFFER_SIZE];
 static volatile uint8_t tx_buffer_start = 0;
@@ -41,8 +41,9 @@ uint8_t ds_add_frame(uint8_t cmd, uint8_t *payload, uint8_t size) {
 	return 1;
 }
 
+#define CALIBRATION_FRAMES 2
 int8_t ds_get_next_nibble(uint8_t *dst) {
-	static int8_t i = -2;
+	static int8_t i = -(CALIBRATION_FRAMES);
 
 	/* nothing to send? */
 	if (tx_buffer_items == 0) {
@@ -59,15 +60,14 @@ int8_t ds_get_next_nibble(uint8_t *dst) {
 	/* select the n'th byte out of our frame struct */
 	if (i < 2*sizeof(*f)) {
 		if (i%2) {
-			*dst = b[i/2] >> 4;
+			*dst = (b[i/2] & 0xF0)>>4;
 		} else {
 			*dst = b[i/2] & 0x0F;
 		}
-		*dst = 0x0F;
 		i++;
 	}
 	/* end of frame reached */
-	if (i > 2*sizeof(*f)) {
+	if (i >= 2*sizeof(*f)) {
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 			/* we consumed one frame */
 			tx_buffer_items--;
@@ -77,7 +77,30 @@ int8_t ds_get_next_nibble(uint8_t *dst) {
 				tx_buffer_start = 0;
 			}
 		}
-		i = -2;
+		i = -(CALIBRATION_FRAMES);
 	}
 	return 1;
+}
+
+uint16_t ds_get_next_pulse(void) {
+	uint16_t val = 0;
+	/* did the last pulse send a data nibble? */
+	static uint8_t nibble_sent = 0;
+	if (nibble_sent) {
+		/* if yes, close the deal by pulling the channel low */
+		nibble_sent = 0;
+		val = 0;
+	} else {
+		uint8_t v = 0;
+		int8_t r = ds_get_next_nibble(&v);
+		/* calibration pulses before a frame */
+		if (r <= 0) {
+			val = (r<=-2 ? 0 : 1023);
+		} else if (r) {
+			/* transmit the binary value of v */
+			val = ((uint32_t)1023*((v&0x0F)+1))/(0x0F+2);
+			nibble_sent = 1;
+		}
+	}
+	return val;
 }
