@@ -15,7 +15,7 @@
 
 #define DS_CHANNEL 5
 
-#define N_3W_SWITCHES 2
+#define N_3W_SWITCHES 4
 
 #define PPM_DDR  DDRB
 #define PPM_PORT PORTB
@@ -80,6 +80,8 @@ static struct {
 } sw_inputs[N_3W_SWITCHES] = {
 	{ &PIND, &PORTD, PD7 },
 	{ &PIND, &PORTD, PD6 },
+	{ &PINB, &PORTB, PB6 },
+	{ &PINB, &PORTB, PB7 },
 };
 
 static int8_t sw_positions[N_3W_SWITCHES] = {0};
@@ -260,7 +262,7 @@ int main(void) {
 		/* check switch for Datenschlag */
 		uint8_t ds_payload[DS_PAYLOAD_LENGTH];
 		uint8_t payload = 0x00;
-		switch (sw_positions[1]) {
+		switch (sw_positions[3]) {
 			case -1:
 				payload = (1<<0 | 1<<2 | 1<<4);
 				break;
@@ -271,7 +273,7 @@ int main(void) {
 				payload = 0xFF;
 				break;
 		}
-		memset(&ds_payload[0], payload, DS_PAYLOAD_LENGTH);
+		memset(&ds_payload, payload, DS_PAYLOAD_LENGTH);
 		/* queue datenschlag frame */
 		if (ds_frame_buffers_available()) {
 			ds_add_frame(0x1E, &ds_payload[0], sizeof(ds_payload)/sizeof(*ds_payload));
