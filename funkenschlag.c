@@ -15,6 +15,8 @@
 
 #define DS_CHANNEL 5
 
+#define N_3W_SWITCHES 2
+
 #define PPM_DDR  DDRB
 #define PPM_PORT PORTB
 #define PPM_PIN  PINB
@@ -39,11 +41,15 @@
 #define FRAME_US 20000L
 #define STOP_US 500
 
-static uint8_t adc_inputs[ADC_CHANNELS] = {
+static uint8_t adc_map[ADC_CHANNELS] = {
 	0,
 	1,
 	2,
 	3,
+};
+
+static uint8_t sw_map[SW_CHANNELS] = {
+	0,
 };
 
 static uint8_t adc_invert[(ADC_CHANNELS+7)/8] = { 0 };
@@ -65,19 +71,20 @@ static int8_t scale[N_CHANNELS] = {
 };
 
 /* we are using switches with 3 positions (neutral, up, down),
- * so each switch uses two digital input pins
+ * each switch using a single input pin through multiplexing
  */
 static struct {
 	volatile uint8_t *pin;
 	volatile uint8_t *port;
 	uint8_t bit;
-} sw_inputs[SW_CHANNELS] = {
+} sw_inputs[N_3W_SWITCHES] = {
 	{ &PIND, &PORTD, PD7 },
-//	{ &PIND, &PORTD, PD6 },
+	{ &PIND, &PORTD, PD6 },
 };
 
+static int8_t sw_positions[N_3W_SWITCHES] = {0};
+
 static uint16_t adc_values[ADC_CHANNELS] = {0};
-static uint16_t sw_values[SW_CHANNELS] = {0};
 
 static uint8_t current_channel;
 static uint16_t frame_time_remaining = 0;
@@ -99,7 +106,8 @@ static uint16_t get_channel(uint8_t i) {
 	if (i < ADC_CHANNELS) {
 		val = adc_values[i];
 	} else if (i < ADC_CHANNELS+SW_CHANNELS) {
-		val = sw_values[i-ADC_CHANNELS];
+		uint8_t sw_id = sw_map[i-ADC_CHANNELS];
+		val = (1023/2)+(1023/2)*sw_positions[sw_id];
 	} else if (i == DS_CHANNEL) {
 		val = ds_get_next_pulse();
 	} else {
@@ -142,7 +150,7 @@ static uint16_t read_adc(uint8_t adc) {
 	uint8_t reads = ADC_READS;
 	while (reads--) {
 		/* set input */
-		ADMUX = ( (ADMUX & 0xF0) | (0x0F & adc_inputs[adc]) );
+		ADMUX = ( (ADMUX & 0xF0) | (0x0F & adc_map[adc]) );
 		/* start conversion */
 		ADCSRA |= (1<<ADSC);
 		/* wait for completion */
@@ -168,10 +176,9 @@ int main(void) {
 	MPX_DDR |= 1<<MPX_BIT;
 
 	/* enable pull-up resistors for switches */
-	for (uint8_t sw = 0; sw < SW_CHANNELS; sw++) {
+	for (uint8_t sw = 0; sw < N_3W_SWITCHES; sw++) {
 		*sw_inputs[sw].port |= 1<<sw_inputs[sw].bit;
 	}
-	PORTD |= 1<<PD6;
 
 	/* configure ADC */
 	ADCSRA = (1<<ADEN | 1<<ADPS2 | 1<<ADPS1 | 0<<ADPS0);
@@ -223,7 +230,7 @@ int main(void) {
 			adc_values[adc] = val;
 		}
 		/* query switches */
-		for (uint8_t sw = 0; sw < SW_CHANNELS; sw++) {
+		for (uint8_t sw = 0; sw < N_3W_SWITCHES; sw++) {
 			/* check with multiplexing on high wire */
 			MPX_PORT &= ~(1<<MPX_BIT);
 			/* give the wires some time */
@@ -233,9 +240,8 @@ int main(void) {
 			MPX_PORT |= 1<<MPX_BIT;
 			/* give the wires some time */
 			_delay_us(10);
-			//uint8_t down = 0;
 			uint8_t down = !!(~(*sw_inputs[sw].pin) & 1<<sw_inputs[sw].bit);
-			sw_values[sw] = 500+(up*500)-(down*500);
+			sw_positions[sw] = (-1*down)+(1*up);
 		}
 		/* check voltage */
 		if ((~VOL_PIN) & 1<<VOL_BIT) {
@@ -251,12 +257,21 @@ int main(void) {
 
 		}
 
-		MPX_PORT &= ~(1<<MPX_BIT);
-		_delay_us(10);
-		uint8_t ds_payload[DS_PAYLOAD_LENGTH];
-		uint8_t payload = (~PIND & 1<<PD6) ? 0xFF : 0x00;
-		memset(&ds_payload[0], payload, DS_PAYLOAD_LENGTH);
 		/* check switch for Datenschlag */
+		uint8_t ds_payload[DS_PAYLOAD_LENGTH];
+		uint8_t payload = 0x00;
+		switch (sw_positions[1]) {
+			case -1:
+				payload = (1<<0 | 1<<2 | 1<<4);
+				break;
+			case 0:
+				payload = 0x00;
+				break;
+			case 1:
+				payload = 0xFF;
+				break;
+		}
+		memset(&ds_payload[0], payload, DS_PAYLOAD_LENGTH);
 		/* queue datenschlag frame */
 		if (ds_frame_buffers_available()) {
 			ds_add_frame(0x1E, &ds_payload[0], sizeof(ds_payload)/sizeof(*ds_payload));
