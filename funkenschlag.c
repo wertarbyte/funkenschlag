@@ -259,7 +259,7 @@ int main(void) {
 		/* check switch for Datenschlag */
 		/* queue datenschlag frame */
 		if (ds_frame_buffers_available()) {
-			ds_add_frame(0xDE, &ds_payload[0], sizeof(ds_payload)/sizeof(*ds_payload));
+			ds_add_frame(0x1E, &ds_payload[0], sizeof(ds_payload)/sizeof(*ds_payload));
 		}
 	}
 	return 0;
