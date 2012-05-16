@@ -260,23 +260,21 @@ int main(void) {
 		}
 
 		/* check switch for Datenschlag */
-		uint8_t ds_payload[DS_PAYLOAD_LENGTH];
-		uint8_t payload = 0x00;
-		switch (sw_positions[3]) {
-			case -1:
-				payload = (1<<0 | 1<<2 | 1<<4);
-				break;
-			case 0:
-				payload = 0x00;
-				break;
-			case 1:
-				payload = 0xFF;
-				break;
+		uint8_t ds_payload[DS_PAYLOAD_LENGTH] = {0};
+		for (uint8_t i=SW_CHANNELS; i<N_3W_SWITCHES; i++) {
+			// mark aux channel as handled by Datenschlag
+			ds_payload[0] |= 1<<i;
+			if (sw_positions[i] != 0) {
+				// mark switch as engaged
+				ds_payload[1] |= 1<<i;
+				if (sw_positions[i] > 0) {
+					ds_payload[2] |= 1<<i;
+				}
+			}
 		}
-		memset(&ds_payload, payload, DS_PAYLOAD_LENGTH);
 		/* queue datenschlag frame */
 		if (ds_frame_buffers_available()) {
-			ds_add_frame(0x1E, &ds_payload[0], sizeof(ds_payload)/sizeof(*ds_payload));
+			ds_add_frame(0xAC, &ds_payload[0], sizeof(ds_payload)/sizeof(*ds_payload));
 		}
 	}
 	return 0;
