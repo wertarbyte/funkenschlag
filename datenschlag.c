@@ -42,7 +42,7 @@ uint8_t ds_add_frame(uint8_t cmd, uint8_t *payload, uint8_t size) {
 }
 
 #define CALIBRATION_FRAMES 2
-int8_t ds_get_next_nibble(uint8_t *dst) {
+static int8_t ds_get_next_nibble(uint8_t *dst, uint8_t peek_only) {
 	static int8_t i = -(CALIBRATION_FRAMES);
 
 	/* nothing to send? */
@@ -51,7 +51,7 @@ int8_t ds_get_next_nibble(uint8_t *dst) {
 	}
 	/* a new  frame just started, send calibration pulse */
 	if (i < 0) {
-		return i++;
+		return peek_only ? i : i++;
 	}
 
 	/* now that i >= 0, the real data transmission starts */
@@ -64,10 +64,12 @@ int8_t ds_get_next_nibble(uint8_t *dst) {
 		} else {
 			*dst = b[i/2] & 0x0F;
 		}
-		i++;
+		if (!peek_only) {
+			i++;
+		}
 	}
 	/* end of frame reached */
-	if (i >= 2*sizeof(*f)) {
+	if (!peek_only && i >= 2*sizeof(*f)) {
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 			/* we consumed one frame */
 			tx_buffer_items--;
@@ -85,14 +87,18 @@ int8_t ds_get_next_nibble(uint8_t *dst) {
 uint16_t ds_get_next_pulse(void) {
 	uint16_t val = 0;
 	/* did the last pulse send a data nibble? */
-	static uint8_t nibble_sent = 0;
-	if (nibble_sent) {
+	static int8_t nibble_sent = 0;
+	static uint8_t last_nibble = 0;
+	uint8_t peek_value = 0;
+	int8_t p_r = ds_get_next_nibble(&peek_value, 1);
+	/* did the last pulse sent a nibble? Is the next nibble identical? */
+	if (nibble_sent && p_r > 0 && peek_value == last_nibble) {
 		/* if yes, close the deal by pulling the channel low */
 		nibble_sent = 0;
 		val = 0;
 	} else {
 		uint8_t v = 0;
-		int8_t r = ds_get_next_nibble(&v);
+		int8_t r = ds_get_next_nibble(&v, 0);
 		/* calibration pulses before a frame */
 		if (r <= 0) {
 			val = (r<=-2 ? 0 : 1023);
@@ -100,6 +106,7 @@ uint16_t ds_get_next_pulse(void) {
 			/* transmit the binary value of v */
 			val = ((uint32_t)1023*((v&0x0F)+1))/(0x0F+2);
 			nibble_sent = 1;
+			last_nibble = v;
 		}
 	}
 	return val;
