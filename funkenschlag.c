@@ -65,7 +65,7 @@ static int16_t trim[N_CHANNELS] = {
 static int8_t scale[N_CHANNELS] = {
 	[0] = 50,
 	[1] = 40,
-	[2] = 25,
+	[2] = 30,
 	[3] = 25,
 	[5] = 0,
 };
