@@ -64,6 +64,10 @@ static int8_t ds_get_next_nibble(uint8_t *dst, uint8_t peek_only) {
 		} else {
 			*dst = b[i/2] & 0x0F;
 		}
+		/* since consecutive identical nibbles slow down the transfer,
+		 * we flip a single bit in each nibble to add diversity
+		 */
+		*dst ^= 1<<i%4;
 		if (!peek_only) {
 			i++;
 		}
