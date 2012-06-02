@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <util/atomic.h>
+#include <stddef.h>
 
 #include "datenschlag.h"
 #include "datenschlag_structs.h"
@@ -28,6 +29,10 @@ uint8_t ds_add_frame(uint8_t cmd, uint8_t *payload, uint8_t size) {
 	f->cmd = cmd;
 	/* do not copy more payload data than the frame can hole */
 	uint8_t pl_size = size > sizeof(f->data) ? sizeof(f->data) : size;
+	/* and not more than the command type specifies */
+	if (pl_size > DS_CMD_PAYLOAD_SIZE(cmd)) {
+		pl_size = DS_CMD_PAYLOAD_SIZE(cmd);
+	}
 	memcpy(&f->data, payload, pl_size);
 	/* calculate checksum */
 	f->chk ^= cmd;
@@ -70,6 +75,12 @@ static int8_t ds_get_next_nibble(uint8_t *dst, uint8_t peek_only) {
 		*dst ^= 1<<i%4;
 		if (!peek_only) {
 			i++;
+			/* if we already transmitted the entire payload needed by the cmd,
+			 * jump to the checksum
+			 */
+			if (i == 2*(DS_CMD_PAYLOAD_SIZE(f->cmd)+offsetof(struct ds_frame, data))) {
+				i = 2*offsetof(struct ds_frame, chk);
+			}
 		}
 	}
 	/* end of frame reached */
