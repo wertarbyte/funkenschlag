@@ -191,10 +191,6 @@ int main(void) {
 
 	/* configure timer */
 
-	/* Timer 2 generates overflows at 1kHz */
-	TCCR2 = (1<<WGM21 | 1<<CS22);
-	OCR2 = 0x7D;
-
 	/* enable CTC waveform generation (TOP == OCR1A) */
 	TCCR1B |= (1<<WGM12);
 	/* set compare value for the stop pulse to 300µs */
@@ -204,8 +200,24 @@ int main(void) {
 	/* set Timer 1 to clk/8, giving us ticks of 1 µs */
 	TCCR1B |= (1<<CS11);
 
+	/* Timer 2 generates overflows at 1kHz */
+#if defined(TCCR2) /* e.g. ATMega8 */
+#define TIMER2_COMP_IRQ TIMER2_COMP_vect
+	TCCR2 = (1<<WGM21 | 1<<CS22);
+	OCR2 = 0x7D;
 	/* enable compare and overflow interrupts */
 	TIMSK = (1<<OCIE2 | 1<<OCIE1B | 1<<OCIE1A);
+#elif defined(TCCR2A) /* e.g. ATMega{8,16,32}8 */
+#define TIMER2_COMP_IRQ TIMER2_COMPA_vect
+	TCCR2A = (1<<WGM21);
+	TCCR2B = (1<<CS22);
+	OCR2A = 0x7D;
+	/* enable compare and overflow interrupts */
+	TIMSK1 = (1<<OCIE1B | 1<<OCIE1A);
+	TIMSK2 = (1<<OCIE2A);
+#else
+#error "Unable to determine timer 2 configuration registers"
+#endif
 
 	/* initialize channel data */
 	start_ppm_frame();
@@ -286,7 +298,7 @@ int main(void) {
 }
 
 /* 1ms has passed, increment the counter */
-ISR(TIMER2_COMP_vect) {
+ISR(TIMER2_COMP_IRQ) {
 	millis++;
 }
 
