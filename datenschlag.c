@@ -29,6 +29,19 @@ uint8_t ds_frame_buffers_available(void) {
 	return DS_TX_BUFFER_SIZE-tx_buffer_items;
 }
 
+uint8_t ds_frame_queued(uint8_t cmd) {
+	uint8_t n = 0;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+		for (uint8_t i=tx_buffer_start; i!=(tx_buffer_start+tx_buffer_items)%DS_TX_BUFFER_SIZE; i=(i+1)%DS_TX_BUFFER_SIZE) {
+			struct ds_frame *f = &tx_buffer[i].frame;
+			if (f->cmd == cmd) {
+				n++;
+			}
+		}
+	}
+	return n;
+}
+
 uint8_t ds_add_frame(uint8_t cmd, uint8_t *payload, uint8_t size) {
 	if (!ds_frame_buffers_available()) {
 		return 0;
