@@ -6,9 +6,15 @@
 #include "datenschlag.h"
 #include "datenschlag_structs.h"
 
-#define DS_TX_BUFFER_SIZE 1
+#define DS_RETRANSMITS 3
+#define DS_TX_BUFFER_SIZE 5
 
-static struct ds_frame tx_buffer[DS_TX_BUFFER_SIZE];
+struct ds_qframe {
+	struct ds_frame frame;
+	uint8_t transmits;
+};
+
+static struct ds_qframe tx_buffer[DS_TX_BUFFER_SIZE];
 static volatile uint8_t tx_buffer_start = 0;
 
 static volatile uint8_t tx_buffer_items = 0;
@@ -48,7 +54,9 @@ uint8_t ds_add_frame(uint8_t cmd, uint8_t *payload, uint8_t size) {
 	}
 
 	/* clear the next free slot in the tx queue */
-	struct ds_frame *f = &tx_buffer[(tx_buffer_start+tx_buffer_items)%DS_TX_BUFFER_SIZE];
+	struct ds_qframe *qf = &tx_buffer[(tx_buffer_start+tx_buffer_items)%DS_TX_BUFFER_SIZE];
+	qf->transmits = DS_RETRANSMITS;
+	struct ds_frame *f = &qf->frame;
 	memset(f, 0, sizeof(*f));
 	/* fill the frame */
 	f->cmd = cmd;
@@ -74,7 +82,7 @@ uint8_t ds_add_frame(uint8_t cmd, uint8_t *payload, uint8_t size) {
 uint8_t ds_abort_frame(uint8_t cmd) {
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 		if (! tx_buffer_items) return 0;
-		if (tx_buffer[tx_buffer_start].cmd != cmd) return 0;
+		if (tx_buffer[tx_buffer_start].frame.cmd != cmd) return 0;
 		advance_to_next_frame();
 	}
 	return 1;
@@ -94,7 +102,8 @@ static int8_t ds_get_next_nibble(uint8_t *dst, uint8_t peek_only) {
 	}
 
 	/* now that i >= 0, the real data transmission starts */
-	struct ds_frame *f = &tx_buffer[tx_buffer_start];
+	struct ds_qframe *q = &tx_buffer[tx_buffer_start];
+	struct ds_frame *f = &q->frame;
 	uint8_t *b = (uint8_t*) f;
 	/* select the n'th byte out of our frame struct */
 	if (i < 2*sizeof(*f)) {
@@ -119,8 +128,10 @@ static int8_t ds_get_next_nibble(uint8_t *dst, uint8_t peek_only) {
 	}
 	/* end of frame reached */
 	if (!peek_only && i >= 2*sizeof(*f)) {
-		advance_to_next_frame();
-		i = -(CALIBRATION_FRAMES);
+		if (! --q->transmits) {
+			advance_to_next_frame();
+			i = -(CALIBRATION_FRAMES);
+		}
 	}
 	return 1;
 }
