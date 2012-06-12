@@ -136,6 +136,7 @@ static int8_t ds_get_next_nibble(uint8_t *dst, uint8_t peek_only) {
 	return 1;
 }
 
+#define DATENSCHLAG_MAX_PULSE_LENGTH 1100
 uint16_t ds_get_next_pulse(void) {
 	uint16_t val = 0;
 	/* did the last pulse send a data nibble? */
@@ -153,10 +154,10 @@ uint16_t ds_get_next_pulse(void) {
 		int8_t r = ds_get_next_nibble(&v, 0);
 		/* calibration pulses before a frame */
 		if (r <= 0) {
-			val = (r<=-2 ? 0 : 1023);
+			val = (r<=-2 ? 0 : DATENSCHLAG_MAX_PULSE_LENGTH);
 		} else if (r) {
 			/* transmit the binary value of v */
-			val = ((uint32_t)1023*((v&0x0F)+1))/(0x0F+2);
+			val = ((uint32_t)DATENSCHLAG_MAX_PULSE_LENGTH*((v&0x0F)+1))/(0x0F+2);
 			nibble_sent = 1;
 			last_nibble = v;
 		}
