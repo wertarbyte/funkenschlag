@@ -13,6 +13,18 @@ static volatile uint8_t tx_buffer_start = 0;
 
 static volatile uint8_t tx_buffer_items = 0;
 
+static void advance_to_next_frame(void) {
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+		/* we consumed one frame */
+		tx_buffer_items--;
+		/* move the start pointer to the next one */
+		tx_buffer_start++;
+		if (tx_buffer_start == DS_TX_BUFFER_SIZE) {
+			tx_buffer_start = 0;
+		}
+	}
+}
+
 uint8_t ds_frame_buffers_available(void) {
 	return DS_TX_BUFFER_SIZE-tx_buffer_items;
 }
@@ -42,6 +54,15 @@ uint8_t ds_add_frame(uint8_t cmd, uint8_t *payload, uint8_t size) {
 
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 		tx_buffer_items++;
+	}
+	return 1;
+}
+
+uint8_t ds_abort_frame(uint8_t cmd) {
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+		if (! tx_buffer_items) return 0;
+		if (tx_buffer[tx_buffer_start].cmd != cmd) return 0;
+		advance_to_next_frame();
 	}
 	return 1;
 }
@@ -85,15 +106,7 @@ static int8_t ds_get_next_nibble(uint8_t *dst, uint8_t peek_only) {
 	}
 	/* end of frame reached */
 	if (!peek_only && i >= 2*sizeof(*f)) {
-		ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-			/* we consumed one frame */
-			tx_buffer_items--;
-			/* move the start pointer to the next one */
-			tx_buffer_start++;
-			if (tx_buffer_start == DS_TX_BUFFER_SIZE) {
-				tx_buffer_start = 0;
-			}
-		}
+		advance_to_next_frame();
 		i = -(CALIBRATION_FRAMES);
 	}
 	return 1;

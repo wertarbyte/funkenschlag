@@ -272,6 +272,7 @@ int main(void) {
 		}
 
 		/* check switch for Datenschlag */
+		static uint8_t old_switch = 0;
 		uint8_t ds_payload[DS_MAX_PAYLOAD_LENGTH] = {0};
 		for (uint8_t i=SW_CHANNELS; i<N_3W_SWITCHES; i++) {
 			switch (sw_positions[i]) {
@@ -287,10 +288,15 @@ int main(void) {
 					break;
 			}
 		}
+		#define DS_CMD_AUX (1<<5| 0x0A)
+		/* if the switch state changes, remove obsolete frames from the queue */
+		if (old_switch != ds_payload[0]) {
+			while (ds_abort_frame(DS_CMD_AUX));
+			old_switch = ds_payload[0];
+		}
 		/* queue datenschlag frame */
 		if (ds_frame_buffers_available()) {
 			/* 0x2A: 001 01010 */
-			#define DS_CMD_AUX (1<<5| 0x0A)
 			ds_add_frame(DS_CMD_AUX, &ds_payload[0], 1);
 		}
 	}
