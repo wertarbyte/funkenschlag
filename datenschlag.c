@@ -6,7 +6,7 @@
 #include "datenschlag.h"
 #include "datenschlag_structs.h"
 
-#define DS_RETRANSMITS 3
+#define DS_RETRANSMITS 2
 #define DS_TX_BUFFER_SIZE 5
 
 struct ds_qframe {
