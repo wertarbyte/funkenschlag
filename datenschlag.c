@@ -40,7 +40,7 @@ uint8_t ds_frame_queued(uint8_t cmd) {
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 		for (uint8_t i=tx_buffer_start; i!=(tx_buffer_start+tx_buffer_items)%DS_TX_BUFFER_SIZE; i=(i+1)%DS_TX_BUFFER_SIZE) {
 			struct ds_frame *f = &tx_buffer[i].frame;
-			if (f->cmd == cmd) {
+			if (cmd == 0xFF || f->cmd == cmd) {
 				n++;
 			}
 		}
@@ -82,7 +82,7 @@ uint8_t ds_add_frame(uint8_t cmd, uint8_t *payload, uint8_t size) {
 uint8_t ds_abort_frame(uint8_t cmd) {
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 		if (! tx_buffer_items) return 0;
-		if (tx_buffer[tx_buffer_start].frame.cmd != cmd) return 0;
+		if (cmd != 0xFF && tx_buffer[tx_buffer_start].frame.cmd != cmd) return 0;
 		advance_to_next_frame();
 	}
 	return 1;

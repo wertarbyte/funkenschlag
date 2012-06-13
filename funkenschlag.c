@@ -288,14 +288,15 @@ int main(void) {
 					break;
 			}
 		}
+		#define DS_CMD_ANY 0xFF
 		#define DS_CMD_AUX (1<<5| 0x0A)
 		/* if the switch state changes, remove obsolete frames from the queue */
 		if (old_switch != ds_payload[0]) {
-			while (ds_abort_frame(DS_CMD_AUX));
+			while (ds_abort_frame(DS_CMD_ANY));
 			old_switch = ds_payload[0];
 		}
 		/* queue datenschlag frame */
-		if (ds_frame_buffers_available()) {
+		if (!ds_frame_queued(DS_CMD_AUX) && ds_frame_buffers_available()) {
 			/* 0x2A: 001 01010 */
 			ds_add_frame(DS_CMD_AUX, &ds_payload[0], 1);
 		}
