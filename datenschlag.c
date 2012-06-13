@@ -19,8 +19,11 @@ static volatile uint8_t tx_buffer_start = 0;
 
 static volatile uint8_t tx_buffer_items = 0;
 
+static uint8_t sem_queue = 0;
+
 static void advance_to_next_frame(void) {
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+	sem_queue++;
+	{
 		/* we consumed one frame */
 		tx_buffer_items--;
 		/* move the start pointer to the next one */
@@ -29,6 +32,7 @@ static void advance_to_next_frame(void) {
 			tx_buffer_start = 0;
 		}
 	}
+	sem_queue--;
 }
 
 uint8_t ds_frame_buffers_available(void) {
@@ -37,14 +41,14 @@ uint8_t ds_frame_buffers_available(void) {
 
 uint8_t ds_frame_queued(uint8_t cmd) {
 	uint8_t n = 0;
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-		for (uint8_t i=tx_buffer_start; i!=(tx_buffer_start+tx_buffer_items)%DS_TX_BUFFER_SIZE; i=(i+1)%DS_TX_BUFFER_SIZE) {
-			struct ds_frame *f = &tx_buffer[i].frame;
-			if (cmd == 0xFF || f->cmd == cmd) {
-				n++;
-			}
+	sem_queue++;
+	for (uint8_t i=tx_buffer_start; i!=(tx_buffer_start+tx_buffer_items)%DS_TX_BUFFER_SIZE; i=(i+1)%DS_TX_BUFFER_SIZE) {
+		struct ds_frame *f = &tx_buffer[i].frame;
+		if (cmd == 0xFF || f->cmd == cmd) {
+			n++;
 		}
 	}
+	sem_queue--;
 	return n;
 }
 
@@ -73,19 +77,21 @@ uint8_t ds_add_frame(uint8_t cmd, uint8_t *payload, uint8_t size) {
 		f->chk ^= payload[i];
 	}
 
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-		tx_buffer_items++;
-	}
+	tx_buffer_items++;
 	return 1;
 }
 
 uint8_t ds_abort_frame(uint8_t cmd) {
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-		if (! tx_buffer_items) return 0;
-		if (cmd != 0xFF && tx_buffer[tx_buffer_start].frame.cmd != cmd) return 0;
-		advance_to_next_frame();
+	uint8_t success = 0;
+	sem_queue++;
+	if (tx_buffer_items) {
+		if (cmd == 0xFF || tx_buffer[tx_buffer_start].frame.cmd == cmd) {
+			advance_to_next_frame();
+			success = 1;
+		}
 	}
-	return 1;
+	sem_queue--;
+	return success;
 }
 
 #define CALIBRATION_FRAMES 2
@@ -143,6 +149,10 @@ uint16_t ds_get_next_pulse(void) {
 	static int8_t nibble_sent = 0;
 	static uint8_t last_nibble = 0;
 	uint8_t peek_value = 0;
+	/* is the semaphore up? Then someone is tinkering with the queue, we have to stall */
+	if (sem_queue > 0) {
+		return 0;
+	}
 	int8_t p_r = ds_get_next_nibble(&peek_value, 1);
 	/* did the last pulse sent a nibble? Is the next nibble identical? */
 	if (nibble_sent && p_r > 0 && peek_value == last_nibble) {
