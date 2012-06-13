@@ -300,6 +300,7 @@ int main(void) {
 			/* 0x2A: 001 01010 */
 			ds_add_frame(DS_CMD_AUX, &ds_payload[0], 1);
 		}
+//#define SEND_MAG_HEADING
 #ifdef SEND_MAG_HEADING
 		/* send orientation */
 		#define DS_CMD_SET_HEADING (2<<5 | 0x04)
