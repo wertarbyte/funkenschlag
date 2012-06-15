@@ -67,20 +67,17 @@ static uint8_t channel_source[N_CHANNELS] = {
 
 static uint8_t adc_invert[(ADC_CHANNELS+7)/8] = { 0 };
 
-static int16_t trim[N_CHANNELS] = {
+static int16_t adc_trim[ADC_CHANNELS] = {
 	[0] = -10,
 	[1] = 40,
 	[2] = 0,
 	[3] = 15,
-	[4] = 25,
-	[5] = 0,
 };
-static int8_t scale[N_CHANNELS] = {
+static int8_t adc_scale[ADC_CHANNELS] = {
 	[0] = 50,
 	[1] = 40,
 	[2] = 30,
 	[3] = 25,
-	[5] = 0,
 };
 
 /* we are using switches with 3 positions (neutral, up, down),
@@ -99,7 +96,8 @@ static struct {
 
 static int8_t sw_positions[N_3W_SWITCHES] = {0};
 
-static uint16_t adc_values[ADC_CHANNELS] = {0};
+static uint16_t adc_raw   [ADC_CHANNELS] = {0};
+static  int16_t adc_values[ADC_CHANNELS] = {0};
 
 static uint8_t current_channel;
 static uint16_t frame_time_remaining = 0;
@@ -116,8 +114,8 @@ static void set_ppm(uint8_t h) {
 	}
 }
 
-static uint16_t get_channel(uint8_t i) {
-	uint16_t val = 0;
+static int16_t get_channel(uint8_t i) {
+	int16_t val = 0;
 	uint8_t src = channel_source[i];
 	switch (SRC_SYS(src)) {
 		case SRC_ADC:
@@ -130,15 +128,7 @@ static uint16_t get_channel(uint8_t i) {
 			val = ds_get_next_pulse();
 			break;
 		default: /* unknown source */
-			return 0;
-
-	}
-	/* adjust the channel value */
-	val += trim[i];
-	if (scale[i]) {
-		int32_t d = (int32_t)1023/2 - val;
-		int32_t nd = (d*(100+scale[i])/(100));
-		val = 1023/2 - nd;
+			break;
 	}
 	return val;
 }
@@ -164,8 +154,8 @@ static void start_ppm_pulse(void) {
 	}
 }
 
-static uint16_t read_adc(uint8_t adc) {
-	uint16_t result = 0;
+static int16_t read_adc(uint8_t adc) {
+	int16_t result = 0;
 #define ADC_READS 8
 	uint8_t reads = ADC_READS;
 	while (reads--) {
@@ -177,7 +167,21 @@ static uint16_t read_adc(uint8_t adc) {
 		while (ADCSRA & (1<<ADSC)) {};
 		result += ADC;
 	}
-	return result/ADC_READS;
+	result /= ADC_READS;
+	adc_raw[adc] = result;
+	/* is this axis inverted? */
+	if (adc_invert[adc/(8*sizeof(*adc_invert))] & 1<<(adc%(8*sizeof(*adc_invert)))) {
+		result = 1023-result;
+	}
+
+	/* adjust the channel value */
+	result += adc_trim[adc];
+	if (adc_scale[adc]) {
+		int32_t d = (int32_t)1023/2 - result;
+		int32_t nd = (d*(100+adc_scale[adc])/(100));
+		result = 1023/2 - nd;
+	}
+	return result;
 }
 
 int main(void) {
@@ -254,12 +258,7 @@ int main(void) {
 
 		/* keep sampling adc data */
 		for (uint8_t adc = 0; adc < ADC_CHANNELS; adc++) {
-			uint16_t val = read_adc(adc);
-			/* is this axis inverted? */
-			if (adc_invert[adc/(8*sizeof(*adc_invert))] & 1<<(adc%(8*sizeof(*adc_invert)))) {
-				val = 1023-val;
-			}
-			adc_values[adc] = val;
+			adc_values[adc] = read_adc(adc);
 		}
 		/* query switches */
 		for (uint8_t sw = 0; sw < N_3W_SWITCHES; sw++) {
