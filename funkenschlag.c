@@ -48,8 +48,21 @@ static uint8_t adc_map[ADC_CHANNELS] = {
 	3,
 };
 
-static uint8_t sw_map[SW_CHANNELS] = {
-	0,
+#define SRC_ADC 1
+#define SRC_SW  2
+#define SRC_DS  3
+#define SRC_ID(s,n) ( (((s)&0x0F)<<4) | ((n)&0x0F) )
+
+#define SRC_SYS(n)  ((n)>>4)
+#define SRC_NUM(n) ((n)&0x0F)
+
+static uint8_t channel_source[N_CHANNELS] = {
+	SRC_ID(SRC_ADC, 0),
+	SRC_ID(SRC_ADC, 1),
+	SRC_ID(SRC_ADC, 2),
+	SRC_ID(SRC_ADC, 3),
+	SRC_ID(SRC_SW,  0),
+	SRC_ID(SRC_DS,  0),
 };
 
 static uint8_t adc_invert[(ADC_CHANNELS+7)/8] = { 0 };
@@ -105,15 +118,20 @@ static void set_ppm(uint8_t h) {
 
 static uint16_t get_channel(uint8_t i) {
 	uint16_t val = 0;
-	if (i < ADC_CHANNELS) {
-		val = adc_values[i];
-	} else if (i < ADC_CHANNELS+SW_CHANNELS) {
-		uint8_t sw_id = sw_map[i-ADC_CHANNELS];
-		val = (1023/2)+(1023/2)*sw_positions[sw_id];
-	} else if (i == DS_CHANNEL) {
-		val = ds_get_next_pulse();
-	} else {
-		return 0;
+	uint8_t src = channel_source[i];
+	switch (SRC_SYS(src)) {
+		case SRC_ADC:
+			val = adc_values[SRC_NUM(src)];
+			break;
+		case SRC_SW:
+			val = (1023/2)+(1023/2)*sw_positions[SRC_NUM(src)];
+			break;
+		case SRC_DS:
+			val = ds_get_next_pulse();
+			break;
+		default: /* unknown source */
+			return 0;
+
 	}
 	/* adjust the channel value */
 	val += trim[i];
