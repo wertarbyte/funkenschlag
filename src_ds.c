@@ -8,18 +8,20 @@
 #include "src_ds.h"
 #include "datenschlag_structs.h"
 #include "datenschlag.h"
+#include "config.h"
 
 void ds_prepare(void) {
+	#define DS_CMD_ANY 0xFF
+
+	uint8_t ds_payload[DS_MAX_PAYLOAD_LENGTH] = {0};
+#ifdef DS_SEND_AUX_SWITCHES
 	/* check switch for Datenschlag */
 	static uint8_t old_switch = 0;
-	uint8_t ds_payload[DS_MAX_PAYLOAD_LENGTH] = {0};
-	#define DS_CMD_ANY 0xFF
-#define SEND_AUX_SWITCHES
-#ifdef SEND_AUX_SWITCHES
-	#define DS_AUX_SW_START 1
-	#define DS_AUX_SW_END   3
-	for (uint8_t i=DS_AUX_SW_START; i<=DS_AUX_SW_END; i++) {
-		switch (sw_get_raw(i)) {
+	uint8_t sw[] = DS_SEND_AUX_SWITCHES;
+	for (uint8_t i=0; i<sizeof(sw)/sizeof(sw[0]) && i<4; i++) {
+		int8_t n=sw[i];
+		if (n<0) continue; // -1 ignores the switch channel
+		switch (sw_get_raw(n)) {
 			case 0:
 				ds_payload[0] |= 1<<i;
 				break;
@@ -44,8 +46,7 @@ void ds_prepare(void) {
 		ds_add_frame(DS_CMD_AUX, &ds_payload[0], 1);
 	}
 #endif
-//#define SEND_MAG_HEADING
-#ifdef SEND_MAG_HEADING
+#ifdef DS_SEND_MAG_HEADING
 	/* send orientation */
 	#define DS_CMD_SET_HEADING (2<<5 | 0x04)
 	static int16_t dir = 0; // set real orientation here
@@ -55,8 +56,7 @@ void ds_prepare(void) {
 		ds_add_frame(DS_CMD_SET_HEADING, &ds_payload[0], 2);
 	}
 #endif
-//#define SEND_GIMBAL_ANGLE
-#ifdef SEND_GIMBAL_ANGLE
+#ifdef DS_SEND_GIMBAL_ANGLE
 	#define DS_GIMBAL_ANGLE_THRESHOLD 30
 	/* send orientation */
 	#define DS_CMD_SET_GIMBAL (1<<5 | 0x0C)

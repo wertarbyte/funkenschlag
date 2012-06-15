@@ -6,8 +6,13 @@
 #include "datenschlag.h"
 #include "datenschlag_structs.h"
 
-#define DS_RETRANSMITS 2
+#include "config.h"
+
 #define DS_TX_BUFFER_SIZE 5
+
+#if !defined(DS_RETRANSMITS)
+#define DS_RETRANSMITS 0
+#endif
 
 struct ds_qframe {
 	struct ds_frame frame;
@@ -59,7 +64,7 @@ uint8_t ds_add_frame(uint8_t cmd, uint8_t *payload, uint8_t size) {
 
 	/* clear the next free slot in the tx queue */
 	struct ds_qframe *qf = &tx_buffer[(tx_buffer_start+tx_buffer_items)%DS_TX_BUFFER_SIZE];
-	qf->transmits = DS_RETRANSMITS;
+	qf->transmits = (1+DS_RETRANSMITS);
 	struct ds_frame *f = &qf->frame;
 	memset(f, 0, sizeof(*f));
 	/* fill the frame */
