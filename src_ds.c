@@ -51,9 +51,11 @@ void ds_prepare(void) {
 #ifdef DS_SEND_MAG_HEADING
 	/* send orientation */
 	#define DS_CMD_SET_HEADING (2<<5 | 0x04)
-	static int16_t dir = 0; // set real orientation here
-	ds_payload[0] = dir>>8;
-	ds_payload[1] = dir&0x0F;
+	int16_t dir = 0; // set real orientation here
+	if ( dir > 180) dir = dir - 360;
+	else if (dir < -180) dir = dir + 360;
+	ds_payload[0] = (dir&0xFF00)>>8;
+	ds_payload[1] = dir&0x00FF;
 	if (!ds_frame_queued(DS_CMD_SET_HEADING) && ds_frame_buffers_available()) {
 		ds_add_frame(DS_CMD_SET_HEADING, &ds_payload[0], 2);
 	}
