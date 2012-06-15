@@ -6,6 +6,7 @@
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 #include <util/delay.h>
+#include "serial.h"
 #include "src_adc.h"
 #include "src_sw.h"
 #include "src_ds.h"
@@ -118,6 +119,8 @@ int main(void) {
 	VOL_DDR &= ~(1<<VOL_BIT);
 	VOL_PORT |= (1<<VOL_BIT); // enable pullup
 
+	serial_init();
+
 	/* configure switches */
 	sw_init();
 
@@ -165,6 +168,7 @@ int main(void) {
 	/* enable interrupts */
 	sei();
 
+	serial_write_str("Welcome!\n");
 	while (1) {
 		/* reset watchdog */
 		wdt_reset();
