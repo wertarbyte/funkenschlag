@@ -1,7 +1,7 @@
 MCU = atmega8
 F_CPU = 8000000
 TARGET = funkenschlag
-SRC = funkenschlag.c datenschlag.c
+SRC = funkenschlag.c src_adc.c datenschlag.c
 COMBINE_SRC = 0
 
 include avr-tmpl.mk
