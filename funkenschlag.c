@@ -7,16 +7,11 @@
 #include <avr/wdt.h>
 #include <util/delay.h>
 #include "src_adc.h"
+#include "src_sw.h"
 #include "datenschlag.h"
 #include "datenschlag_structs.h"
 
 #define N_CHANNELS 6
-#define ADC_CHANNELS 4
-#define SW_CHANNELS 1
-
-#define DS_CHANNEL 5
-
-#define N_3W_SWITCHES 4
 
 #define PPM_DDR  DDRB
 #define PPM_PORT PORTB
@@ -32,12 +27,6 @@
 #define VOL_PORT PORTB
 #define VOL_PIN  PINB
 #define VOL_BIT  PB1
-
-/* switch multiplexing */
-#define MPX_DDR  DDRB
-#define MPX_PORT PORTB
-#define MPX_PIN  PINB
-#define MPX_BIT  PB2
 
 #define FRAME_US 20000L
 #define STOP_US 500
@@ -59,21 +48,6 @@ static uint8_t channel_source[N_CHANNELS] = {
 	SRC_ID(SRC_DS,  0),
 };
 
-/* we are using switches with 3 positions (neutral, up, down),
- * each switch using a single input pin through multiplexing
- */
-static struct {
-	volatile uint8_t *pin;
-	volatile uint8_t *port;
-	uint8_t bit;
-} sw_inputs[N_3W_SWITCHES] = {
-	{ &PIND, &PORTD, PD7 },
-	{ &PIND, &PORTD, PD6 },
-	{ &PINB, &PORTB, PB6 },
-	{ &PINB, &PORTB, PB7 },
-};
-
-static int8_t sw_positions[N_3W_SWITCHES] = {0};
 
 static uint8_t current_channel;
 static uint16_t frame_time_remaining = 0;
@@ -98,7 +72,7 @@ static int16_t get_channel(uint8_t i) {
 			val = adc_get(SRC_NUM(src));
 			break;
 		case SRC_SW:
-			val = (1023/2)+(1023/2)*sw_positions[SRC_NUM(src)];
+			val = sw_get(SRC_NUM(src));
 			break;
 		case SRC_DS:
 			val = ds_get_next_pulse();
@@ -143,12 +117,8 @@ int main(void) {
 	VOL_DDR &= ~(1<<VOL_BIT);
 	VOL_PORT |= (1<<VOL_BIT); // enable pullup
 
-	MPX_DDR |= 1<<MPX_BIT;
-
-	/* enable pull-up resistors for switches */
-	for (uint8_t sw = 0; sw < N_3W_SWITCHES; sw++) {
-		*sw_inputs[sw].port |= 1<<sw_inputs[sw].bit;
-	}
+	/* configure switches */
+	sw_init();
 
 	/* configure ADC */
 	adc_init();
@@ -202,19 +172,8 @@ int main(void) {
 		adc_query();
 
 		/* query switches */
-		for (uint8_t sw = 0; sw < N_3W_SWITCHES; sw++) {
-			/* check with multiplexing on high wire */
-			MPX_PORT &= ~(1<<MPX_BIT);
-			/* give the wires some time */
-			_delay_us(10);
-			uint8_t up = !!(~(*sw_inputs[sw].pin) & 1<<sw_inputs[sw].bit);
-			/* check with multiplexing on low wire */
-			MPX_PORT |= 1<<MPX_BIT;
-			/* give the wires some time */
-			_delay_us(10);
-			uint8_t down = !!(~(*sw_inputs[sw].pin) & 1<<sw_inputs[sw].bit);
-			sw_positions[sw] = (-1*down)+(1*up);
-		}
+		sw_query();
+
 		/* check voltage */
 		if ((~VOL_PIN) & 1<<VOL_BIT) {
 			// everything OK
@@ -235,8 +194,10 @@ int main(void) {
 		#define DS_CMD_ANY 0xFF
 #define SEND_AUX_SWITCHES
 #ifdef SEND_AUX_SWITCHES
-		for (uint8_t i=SW_CHANNELS; i<N_3W_SWITCHES; i++) {
-			switch (sw_positions[i]) {
+		#define DS_AUX_SW_START 1
+		#define DS_AUX_SW_END   3
+		for (uint8_t i=DS_AUX_SW_START; i<=DS_AUX_SW_END; i++) {
+			switch (sw_get_raw(i)) {
 				case 0:
 					ds_payload[0] |= 1<<i;
 					break;
