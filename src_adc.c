@@ -4,6 +4,7 @@
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 #include <util/delay.h>
+#include "config.h"
 #include "src_adc.h"
 
 static uint8_t adc_map[] = {
@@ -11,6 +12,10 @@ static uint8_t adc_map[] = {
 	1,
 	2,
 	3,
+#ifdef USE_ADC4_ADC5
+	4,
+	5,
+#endif
 };
 
 #define ADC_CHANNELS ( sizeof(adc_map)/sizeof(*adc_map) )
