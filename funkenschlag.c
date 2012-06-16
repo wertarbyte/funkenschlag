@@ -13,7 +13,6 @@
 #include "datenschlag.h"
 #include "datenschlag_structs.h"
 
-#define N_CHANNELS 6
 
 #define PPM_DDR  DDRB
 #define PPM_PORT PORTB
@@ -41,7 +40,7 @@
 #define SRC_SYS(n)  ((n)>>4)
 #define SRC_NUM(n) ((n)&0x0F)
 
-static uint8_t channel_source[N_CHANNELS] = {
+static uint8_t channel_source[] = {
 	SRC_ID(SRC_ADC, 0),
 	SRC_ID(SRC_ADC, 1),
 	SRC_ID(SRC_ADC, 2),
@@ -50,6 +49,7 @@ static uint8_t channel_source[N_CHANNELS] = {
 	SRC_ID(SRC_DS,  0),
 };
 
+#define N_CHANNELS (sizeof(channel_source)/sizeof(*channel_source))
 
 static uint8_t current_channel;
 static uint16_t frame_time_remaining = 0;

@@ -12,7 +12,6 @@
 #define MPX_PIN  PINB
 #define MPX_BIT  PB2
 
-#define N_3W_SWITCHES 4
 
 /* we are using switches with 3 positions (neutral, up, down),
  * each switch using a single input pin through multiplexing
@@ -21,12 +20,14 @@ static struct {
 	volatile uint8_t *pin;
 	volatile uint8_t *port;
 	uint8_t bit;
-} sw_inputs[N_3W_SWITCHES] = {
+} sw_inputs[] = {
 	{ &PIND, &PORTD, PD7 },
 	{ &PIND, &PORTD, PD6 },
 	{ &PINB, &PORTB, PB6 },
 	{ &PINB, &PORTB, PB7 },
 };
+
+#define N_3W_SWITCHES ( sizeof(sw_inputs)/sizeof(*sw_inputs) )
 
 static int8_t sw_positions[N_3W_SWITCHES] = {0};
 

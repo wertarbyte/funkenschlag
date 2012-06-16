@@ -6,14 +6,14 @@
 #include <util/delay.h>
 #include "src_adc.h"
 
-#define ADC_CHANNELS 4
-
-static uint8_t adc_map[ADC_CHANNELS] = {
+static uint8_t adc_map[] = {
 	0,
 	1,
 	2,
 	3,
 };
+
+#define ADC_CHANNELS ( sizeof(adc_map)/sizeof(*adc_map) )
 
 static uint8_t adc_invert[(ADC_CHANNELS+7)/8] = { 0 };
 
