@@ -18,5 +18,8 @@
 // transmit gimbal data
 //#define DS_SEND_GIMBAL_ANGLE
 
+// read gimbal angle from ADC input
+//#define DS_GIMBAL_ADC 5
+
 // transmit reference heading
 //#define DS_SEND_MAG_HEADING

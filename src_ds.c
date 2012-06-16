@@ -5,6 +5,7 @@
 #include <avr/wdt.h>
 #include <util/delay.h>
 #include "src_sw.h"
+#include "src_adc.h"
 #include "src_ds.h"
 #include "datenschlag_structs.h"
 #include "datenschlag.h"
@@ -66,6 +67,9 @@ void ds_prepare(void) {
 	#define DS_CMD_SET_GIMBAL (1<<5 | 0x0C)
 	/* angle in a range from 0 to 255 (180°) */
 	uint8_t angle = 0; // set desired angle here
+#ifdef DS_GIMBAL_ADC
+	angle = adc_get_raw(DS_GIMBAL_POT)>>2;
+#endif
 	ds_payload[0] = angle;
 #ifdef DS_BULLY_UPDATE
 	static uint8_t last_angle = 0;

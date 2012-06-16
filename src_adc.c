@@ -72,6 +72,10 @@ int16_t adc_get(uint8_t n) {
 	return adc_values[n];
 }
 
+uint16_t adc_get_raw(uint8_t n) {
+	return adc_raw[n];
+}
+
 void adc_query(void) {
 	/* keep sampling adc data */
 	for (uint8_t adc = 0; adc < ADC_CHANNELS; adc++) {
