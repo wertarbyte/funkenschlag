@@ -23,3 +23,6 @@
 
 // transmit reference heading
 //#define DS_SEND_MAG_HEADING
+
+//read headfree orientation from ADC input
+//#define DS_HEADING_ADC 5

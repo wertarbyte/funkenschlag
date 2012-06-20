@@ -53,6 +53,10 @@ void ds_prepare(void) {
 	/* send orientation */
 	#define DS_CMD_SET_HEADING (2<<5 | 0x04)
 	int16_t dir = 0; // set real orientation here
+#ifdef DS_HEADING_ADC
+	int16_t adc = (adc_get_raw(DS_HEADING_ADC)>>2);
+	dir = -180L+((adc)*360L/255L);
+#endif
 	if ( dir > 180) dir = dir - 360;
 	else if (dir < -180) dir = dir + 360;
 	ds_payload[0] = (dir&0xFF00)>>8;
@@ -68,7 +72,7 @@ void ds_prepare(void) {
 	/* angle in a range from 0 to 255 (180°) */
 	uint8_t angle = 0; // set desired angle here
 #ifdef DS_GIMBAL_ADC
-	angle = adc_get_raw(DS_GIMBAL_POT)>>2;
+	angle = adc_get_raw(DS_GIMBAL_ADC)>>2;
 #endif
 	ds_payload[0] = angle;
 #ifdef DS_BULLY_UPDATE
