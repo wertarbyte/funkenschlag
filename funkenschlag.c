@@ -6,6 +6,7 @@
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 #include <util/delay.h>
+#include "config.h"
 #include "serial.h"
 #include "src_adc.h"
 #include "src_sw.h"
@@ -47,6 +48,10 @@ static uint8_t channel_source[] = {
 	SRC_ID(SRC_ADC, 3),
 	SRC_ID(SRC_SW,  0),
 	SRC_ID(SRC_DS,  0),
+#ifdef USE_ADC4_ADC5
+	SRC_ID(SRC_ADC, 4),
+	SRC_ID(SRC_ADC, 5),
+#endif
 };
 
 #define N_CHANNELS (sizeof(channel_source)/sizeof(*channel_source))
