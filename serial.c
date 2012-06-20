@@ -5,24 +5,54 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 
+#if defined(UCSRA) /* e.g. ATMega 8*/
+	#define UART_CONF_A UCSRA
+	#define UART_CONF_B UCSRB
+	#define UART_CONF_C UCSRC
+	#define UART_CONF_C_VAL (1<<URSEL | 1<<UCSZ1 | 1<<UCSZ0)
+	#define UART_BRRH UBRRH
+	#define UART_BRRL UBRRL
+	#define UART_U2X U2X
+	#define UART_UDRE UDRE
+	#define UART_TXEN TXEN
+	#define UART_RXEN RXEN
+	#define UART_BUSY (UART_CONF_A & (1<<UDRE))
+	#define UART_UDR UDR
+#elif defined(UCSR0A) /* e.g. ATMega_8 */
+	#define UART_CONF_A UCSR0A
+	#define UART_CONF_B UCSR0B
+	#define UART_CONF_C UCSR0C
+	#define UART_CONF_C_VAL (1<<UCSZ01 | 1<<UCSZ00)
+	#define UART_BRRH UBRR0H
+	#define UART_BRRL UBRR0L
+	#define UART_U2X U2X0
+	#define UART_UDRE UDRE0
+	#define UART_TXEN TXEN0
+	#define UART_RXEN RXEN0
+	#define UART_BUSY (UART_CONF_A & (1<<UDRE0))
+	#define UART_UDR UDR0
+#else
+	#error "Unable to determine UART configuration"
+#endif
+
 void serial_init(void) {
 	#define BAUD 38400
 	#include <util/setbaud.h>
-	UBRRH = UBRRH_VALUE;
-	UBRRL = UBRRL_VALUE;
+	UART_BRRH = UBRRH_VALUE;
+	UART_BRRL = UBRRL_VALUE;
 	#if USE_2X /* output from setbaud.h */
-		UCSRA |= 1<<U2X;
+		UART_CONF_A |= 1<<UART_U2X;
 	#else
-		UCSRA &= ~(1<<U2X);
+		UART_CONF_A &= ~(1<<UART_U2X);
 	#endif
 	#undef BAUD
-	UCSRB |= (1<<TXEN | 1<<RXEN);
-	UCSRC |= (1<<URSEL | 1<<UCSZ1 | 1<<UCSZ0);
+	UART_CONF_B |= (1<<UART_TXEN | 1<<UART_RXEN);
+	UART_CONF_C = UART_CONF_C_VAL;
 }
 
 void serial_write(char c) {
-	while(!(UCSRA & (1<<UDRE)));
-	UDR = c;
+	while(!(UART_BUSY));
+	UART_UDR = c;
 }
 
 void serial_write_str(char *s) {
