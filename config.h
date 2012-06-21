@@ -3,7 +3,7 @@
 /* ADC configuration */
 
 // enable ADC4 and ADC5 - this disables I²C!
-#define USE_ADC4_ADC5
+//#define USE_ADC4_ADC5
 
 /* Datenschlag configuration */
 
