@@ -8,9 +8,11 @@
 #include <util/delay.h>
 #include "config.h"
 #include "serial.h"
+#include "twi.h"
 #include "src_adc.h"
 #include "src_sw.h"
 #include "src_ds.h"
+#include "src_twi_adc.h"
 #include "datenschlag.h"
 #include "datenschlag_structs.h"
 
@@ -36,6 +38,7 @@
 #define SRC_ADC 1
 #define SRC_SW  2
 #define SRC_DS  3
+#define SRC_TWI_ADC  4
 #define SRC_ID(s,n) ( (((s)&0x0F)<<4) | ((n)&0x0F) )
 
 #define SRC_SYS(n)  ((n)>>4)
@@ -51,6 +54,9 @@ static uint8_t channel_source[] = {
 #ifdef USE_ADC4_ADC5
 	SRC_ID(SRC_ADC, 4),
 	SRC_ID(SRC_ADC, 5),
+#elif defined(USE_TWI_ADC)
+	SRC_ID(SRC_TWI_ADC, 0),
+	SRC_ID(SRC_TWI_ADC, 1),
 #endif
 };
 
@@ -83,6 +89,9 @@ static int16_t get_channel(uint8_t i) {
 			break;
 		case SRC_DS:
 			val = ds_get_next_pulse();
+			break;
+		case SRC_TWI_ADC:
+			val = twi_adc_get(SRC_NUM(src));
 			break;
 		default: /* unknown source */
 			break;
@@ -125,12 +134,19 @@ int main(void) {
 	VOL_PORT |= (1<<VOL_BIT); // enable pullup
 
 	serial_init();
+#ifdef ENABLE_TWI
+	twi_init();
+#endif
 
 	/* configure switches */
 	sw_init();
 
 	/* configure ADC */
 	adc_init();
+
+#if defined(USE_TWI_ADC)
+	twi_adc_init();
+#endif
 
 	/* configure watchfog timer to reset after 60ms */
 	wdt_enable(WDTO_60MS);
@@ -186,6 +202,11 @@ int main(void) {
 
 		/* prepare Datenschlag data frames */
 		ds_prepare();
+
+#ifdef USE_TWI_ADC
+		/* query TWI/I²C ADC */
+		twi_adc_query();
+#endif
 
 		/* check voltage */
 		if ((~VOL_PIN) & 1<<VOL_BIT) {

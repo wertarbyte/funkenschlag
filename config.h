@@ -1,9 +1,15 @@
 /*** Funkenschlag configuration file ***/
 
+// use TWI?
+//#define ENABLE_TWI
+
 /* ADC configuration */
 
-// enable ADC4 and ADC5 - this disables I²C!
+// enable ADC4 and ADC5 - cannot be used in conjunction with TWI/I²c!
 //#define USE_ADC4_ADC5
+
+// enable PCF 8159 ADC via TWI
+//#define USE_TWI_ADC
 
 /* Datenschlag configuration */
 
