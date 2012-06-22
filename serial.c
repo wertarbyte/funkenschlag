@@ -4,6 +4,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
+#include <stdio.h>
 
 #if defined(UCSRA) /* e.g. ATMega 8*/
 	#define UART_CONF_A UCSRA
