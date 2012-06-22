@@ -6,7 +6,6 @@
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 #include <util/delay.h>
-#include "config.h"
 #include "serial.h"
 #include "twi.h"
 #include "src_adc.h"
@@ -14,6 +13,7 @@
 #include "src_ds.h"
 #include "src_twi_adc.h"
 #include "datenschlag.h"
+#include "input.h"
 #include "datenschlag_structs.h"
 
 
@@ -35,14 +35,7 @@
 #define FRAME_US 20000L
 #define STOP_US 500
 
-#define SRC_ADC 1
-#define SRC_SW  2
-#define SRC_DS  3
-#define SRC_TWI_ADC  4
-#define SRC_ID(s,n) ( (((s)&0x0F)<<4) | ((n)&0x0F) )
-
-#define SRC_SYS(n)  ((n)>>4)
-#define SRC_NUM(n) ((n)&0x0F)
+#include "config.h"
 
 static uint8_t channel_source[] = {
 	SRC_ID(SRC_ADC, 0),
