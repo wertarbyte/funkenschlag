@@ -3,6 +3,8 @@
 #include "src_adc.h"
 #include "src_twi_adc.h"
 #include "src_sw.h"
+#include "src_nunchuk.h"
+
 #include "config.h"
 
 int16_t get_input_range(uint8_t src, uint8_t max) {
@@ -17,6 +19,11 @@ int16_t get_input_range(uint8_t src, uint8_t max) {
 		case SRC_TWI_ADC:
 			val = max ? 255 : 0;
 			break;
+#ifdef USE_NUNCHUK
+		case SRC_NUNCHUK:
+			val = (max ? -1 : 1)*(SRC_NUM(src) == 0 ? 180 : 90);
+			break;
+#endif
 		case SRC_DS: /* SRC_DS will not yield a return value */
 		case SRC_NULL:
 		default: /* unknown source */
@@ -37,6 +44,11 @@ int16_t get_input(uint8_t src) {
 		case SRC_TWI_ADC:
 			val = twi_adc_get_raw(SRC_NUM(src));
 			break;
+#ifdef USE_NUNCHUK
+		case SRC_NUNCHUK:
+			val = nunchuk_get_raw(SRC_NUM(src));
+			break;
+#endif
 		case SRC_DS: /* SRC_DS will not yield a return value */
 		case SRC_NULL:
 		default: /* unknown source */

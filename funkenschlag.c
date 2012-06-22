@@ -12,6 +12,7 @@
 #include "src_sw.h"
 #include "src_ds.h"
 #include "src_twi_adc.h"
+#include "src_nunchuk.h"
 #include "datenschlag.h"
 #include "input.h"
 #include "datenschlag_structs.h"
@@ -87,6 +88,11 @@ static int16_t get_channel(uint8_t i) {
 		case SRC_TWI_ADC:
 			val = twi_adc_get(SRC_NUM(src));
 			break;
+#ifdef USE_NUNCHUK
+		case SRC_NUNCHUK:
+			val = nunchuk_get(SRC_NUM(src));
+			break;
+#endif
 		default: /* unknown source */
 			break;
 	}
@@ -130,6 +136,9 @@ int main(void) {
 	serial_init();
 #ifdef ENABLE_TWI
 	twi_init();
+#endif
+#ifdef USE_NUNCHUK
+	nunchuk_init();
 #endif
 
 	/* configure switches */
@@ -206,6 +215,10 @@ int main(void) {
 #endif
 #if defined(USE_MAG)
 		mag_query();
+#endif
+
+#ifdef USE_NUNCHUK
+		nunchuk_query();
 #endif
 
 		/* check voltage */

@@ -38,3 +38,9 @@
 
 //read headfree orientation from input
 //#define DS_HEADING_INPUT SRC_ID(SRC_TWI_ADC, 0)
+
+/* external controllers */
+// enable the use of Wii Nunchuk? (requires TWI)
+//#define USE_NUNCHUK
+// angle at which the control is at maximum
+//#define NUNCHUK_CTRL_ANGLE 50

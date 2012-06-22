@@ -3,6 +3,7 @@
 #define SRC_SW  2
 #define SRC_DS  3
 #define SRC_TWI_ADC  4
+#define SRC_NUNCHUK 5
 #define SRC_ID(s,n) ( (((s)&0x0F)<<4) | ((n)&0x0F) )
 
 #define SRC_SYS(n)  ((n)>>4)
