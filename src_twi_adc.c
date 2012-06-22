@@ -16,17 +16,6 @@
 uint16_t twi_adc_raw   [TWI_ADC_CHANNELS] = {0};
 int16_t  twi_adc_values[TWI_ADC_CHANNELS] = {0};
 
-static int16_t read_adc(uint8_t adc) {
-	uint8_t result = 0;
-	twi_start(TWI_ADC_ADDR<<1);
-	twi_write(adc);
-	twi_stop();
-	twi_start((TWI_ADC_ADDR<<1) | 1);
-	twi_read(1); /* discard first response */
-	result = twi_read(0);
-	return result;
-}
-
 int16_t twi_adc_get(uint8_t n) {
 	return twi_adc_values[n];
 }
@@ -37,9 +26,15 @@ uint16_t twi_adc_get_raw(uint8_t n) {
 
 void twi_adc_query(void) {
 	/* keep sampling adc data */
+	twi_start(TWI_ADC_ADDR<<1);
+	/* start at AIN0, autoincrement through channels */
+	twi_write(1<<2 | (0 & 0x03));
+	twi_stop();
+	twi_start((TWI_ADC_ADDR<<1) | 1);
+	twi_read(1); /* discard result code of precious cycle */
 	for (uint8_t adc = 0; adc < TWI_ADC_CHANNELS; adc++) {
+		twi_adc_raw[adc] = twi_read(adc < TWI_ADC_CHANNELS-1);
 		/* scale to 10 bit values */
-		twi_adc_raw[adc] = read_adc(adc);
 		twi_adc_values[adc] = twi_adc_raw[adc]<<2;
 	}
 }
