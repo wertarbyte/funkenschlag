@@ -60,3 +60,9 @@ void serial_write_str(char *s) {
 		serial_write(*s++);
 	}
 }
+
+void serial_write_int(int16_t i) {
+	char str[10];
+	snprintf(str, 10, "%i\n", i);
+	serial_write_str(str);
+}
