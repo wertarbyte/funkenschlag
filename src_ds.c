@@ -4,6 +4,7 @@
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 #include <util/delay.h>
+#include <string.h>
 #include "src_sw.h"
 #include "src_adc.h"
 #include "src_ds.h"
@@ -19,23 +20,23 @@ void ds_prepare(void) {
 #ifdef DS_SEND_AUX_SWITCHES
 	/* check switches for Datenschlag */
 	uint8_t sw[] = DS_SEND_AUX_SWITCHES;
-	for (uint8_t i=0; i<sizeof(sw)/sizeof(sw[0]) && i<4; i++) {
+	for (uint8_t i=0; i<sizeof(sw)/sizeof(sw[0]) && i<8; i++) {
 		uint8_t n=sw[i];
 		if (n==0) continue; // 0 (SRC_NULL) ignores the switch channel
 		switch (get_input_scaled(n, -1, 1)) {
 			case 0:
-				ds_payload[0] |= 1<<i;
+				ds_payload[i/4] |= 1<<(i%4);
 				break;
 			case 1:
-				ds_payload[0] |= 1<<i;
-				ds_payload[0] |= 1<<(i+4);
+				ds_payload[i/4] |= 1<<(i%4);
+				ds_payload[i/4] |= 1<<((i%4)+4);
 				break;
 			case -1:
-				ds_payload[0] |= 1<<(i+4);
+				ds_payload[i/4] |= 1<<((i%4)+4);
 				break;
 		}
 	}
-	#define DS_CMD_AUX (1<<5| 0x0A)
+	#define DS_CMD_AUX (2<<5| 0x0A)
 	/* if the switch state changes, remove obsolete frames from the queue */
 #ifdef DS_BULLY_UPDATE
 	static uint8_t old_switch = 0;
@@ -46,11 +47,12 @@ void ds_prepare(void) {
 #endif
 	/* queue datenschlag frame */
 	if (!ds_frame_queued(DS_CMD_AUX) && ds_frame_buffers_available()) {
-		/* 0x2A: 001 01010 */
-		ds_add_frame(DS_CMD_AUX, &ds_payload[0], 1);
+		/* 0x4A: 001 01010 */
+		ds_add_frame(DS_CMD_AUX, &ds_payload[0], 2);
 	}
 #endif
 #ifdef DS_SEND_MAG_HEADING
+	memset(ds_payload, 0, sizeof(ds_payload));
 	/* send orientation */
 	#define DS_CMD_SET_HEADING (2<<5 | 0x04)
 	int16_t dir = 0; // set real orientation here
@@ -66,6 +68,7 @@ void ds_prepare(void) {
 	}
 #endif
 #ifdef DS_SEND_GIMBAL_ANGLE
+	memset(ds_payload, 0, sizeof(ds_payload));
 	#define DS_GIMBAL_ANGLE_THRESHOLD 30
 	/* send orientation */
 	#define DS_CMD_SET_GIMBAL (1<<5 | 0x0C)

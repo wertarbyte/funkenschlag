@@ -18,7 +18,7 @@
 // when defined, switch changes cancel all other transissions
 //#define DS_BULLY_UPDATE
 
-// transmit switches 1, 2 and 3 via data channel as AUX2-AUX4
+// transmit switches 1, 2 and 3 via data channel as AUX2-AUX4 (up to 8 inputs can be specified, 0 disables the AUX channel control)
 #define DS_SEND_AUX_SWITCHES {0, SRC_ID(SRC_SW, 1), SRC_ID(SRC_SW, 2), SRC_ID(SRC_SW, 3)}
 
 // transmit gimbal data
