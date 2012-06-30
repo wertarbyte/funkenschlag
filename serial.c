@@ -64,6 +64,6 @@ void serial_write_str(char *s) {
 
 void serial_write_int(int16_t i) {
 	char str[10];
-	snprintf(str, 10, "%i\n", i);
+	snprintf(str, 10, "%i", i);
 	serial_write_str(str);
 }
