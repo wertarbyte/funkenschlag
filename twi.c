@@ -42,3 +42,10 @@ uint8_t twi_read(uint8_t ack) {
 	if (!ack) twi_stop();
 	return result;
 }
+
+void twi_write_reg(uint8_t addr, uint8_t reg, uint8_t val) {
+	twi_start(addr<<1);
+	twi_write(reg);
+	twi_write(val);
+	twi_stop();
+}
