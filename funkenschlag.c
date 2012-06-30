@@ -15,6 +15,7 @@
 #include "datenschlag.h"
 #include "input.h"
 #include "datenschlag_structs.h"
+#include "mag.h"
 
 
 #define PPM_DDR  DDRB
@@ -140,6 +141,9 @@ int main(void) {
 #if defined(USE_TWI_ADC)
 	twi_adc_init();
 #endif
+#if defined(USE_MAG)
+	mag_init();
+#endif
 
 	/* configure watchfog timer to reset after 60ms */
 	wdt_enable(WDTO_60MS);
@@ -199,6 +203,9 @@ int main(void) {
 #ifdef USE_TWI_ADC
 		/* query TWI/I²C ADC */
 		twi_adc_query();
+#endif
+#if defined(USE_MAG)
+		mag_query();
 #endif
 
 		/* check voltage */

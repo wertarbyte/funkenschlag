@@ -11,6 +11,12 @@
 // enable PCF 8159 ADC via TWI
 //#define USE_TWI_ADC
 
+// enable I²C compass HMC5883
+//#define USE_MAG
+
+// change orientation of compass sensor
+//#define MAG_ORIENTATION(X, Y, Z)  {mag_data[M_X]  = -(X); mag_data[M_Y]  = (Y); mag_data[M_Z]  = (Z);}
+
 /* Datenschlag configuration */
 
 #define DS_RETRANSMITS 0
@@ -19,7 +25,7 @@
 //#define DS_BULLY_UPDATE
 
 // transmit switches 1, 2 and 3 via data channel as AUX2-AUX4 (up to 8 inputs can be specified, 0 disables the AUX channel control)
-#define DS_SEND_AUX_SWITCHES {0, SRC_ID(SRC_SW, 1), SRC_ID(SRC_SW, 2), SRC_ID(SRC_SW, 3)}
+//#define DS_SEND_AUX_SWITCHES {0, SRC_ID(SRC_SW, 1), SRC_ID(SRC_SW, 2), SRC_ID(SRC_SW, 3)}
 
 // transmit gimbal data
 //#define DS_SEND_GIMBAL_ANGLE

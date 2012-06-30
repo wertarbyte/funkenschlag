@@ -11,6 +11,7 @@
 #include "datenschlag_structs.h"
 #include "datenschlag.h"
 #include "input.h"
+#include "mag.h"
 #include "config.h"
 
 void ds_prepare(void) {
@@ -56,8 +57,12 @@ void ds_prepare(void) {
 	/* send orientation */
 	#define DS_CMD_SET_HEADING (2<<5 | 0x04)
 	int16_t dir = 0; // set real orientation here
-#ifdef DS_HEADING_INPUT
+#if defined(DS_HEADING_INPUT)
 	dir = get_input_scaled(DS_HEADING_INPUT, -180, 180);
+#elif defined(USE_MAG)
+	dir = mag_heading()/100;
+#else
+#error "DS_SEND_MAG_HEADING defined, but neither magnetometer (USE_MAG) or input source specified (DS_HEADING_INPUT)"
 #endif
 	if ( dir > 180) dir = dir - 360;
 	else if (dir < -180) dir = dir + 360;
