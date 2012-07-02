@@ -9,6 +9,8 @@
 #include "src_twi_adc.h"
 #include "twi.h"
 
+#ifdef USE_TWI_ADC
+
 /* PCF8591 I²C ADC/DAC */
 #define TWI_ADC_ADDR 0x48
 #define TWI_ADC_CHANNELS 4
@@ -41,3 +43,5 @@ void twi_adc_query(void) {
 
 void twi_adc_init(void) {
 }
+
+#endif

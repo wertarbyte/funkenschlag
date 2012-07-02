@@ -16,9 +16,11 @@ int16_t get_input_range(uint8_t src, uint8_t max) {
 		case SRC_SW:
 			val = max ? 1 : -1;
 			break;
+#ifdef USE_TWI_ADC
 		case SRC_TWI_ADC:
 			val = max ? 255 : 0;
 			break;
+#endif
 #ifdef USE_NUNCHUK
 		case SRC_NUNCHUK:
 			val = (max ? -1 : 1)*(SRC_NUM(src) == 0 ? 180 : 90);
@@ -41,9 +43,11 @@ int16_t get_input(uint8_t src) {
 		case SRC_SW:
 			val = sw_get_raw(SRC_NUM(src));
 			break;
+#ifdef USE_TWI_ADC
 		case SRC_TWI_ADC:
 			val = twi_adc_get_raw(SRC_NUM(src));
 			break;
+#endif
 #ifdef USE_NUNCHUK
 		case SRC_NUNCHUK:
 			val = nunchuk_get_raw(SRC_NUM(src));

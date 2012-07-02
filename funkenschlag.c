@@ -85,9 +85,11 @@ static int16_t get_channel(uint8_t i) {
 		case SRC_DS:
 			val = ds_get_next_pulse();
 			break;
+#ifdef USE_TWI_ADC
 		case SRC_TWI_ADC:
 			val = twi_adc_get(SRC_NUM(src));
 			break;
+#endif
 #ifdef USE_NUNCHUK
 		case SRC_NUNCHUK:
 			val = nunchuk_get(SRC_NUM(src));
