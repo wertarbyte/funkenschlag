@@ -23,7 +23,7 @@ int16_t get_input_range(uint8_t src, uint8_t max) {
 #endif
 #ifdef USE_NUNCHUK
 		case SRC_NUNCHUK:
-			val = (max ? -1 : 1)*(SRC_NUM(src) == 0 ? 180 : 90);
+			val = nunchuk_get_range(SRC_NUM(src), max);
 			break;
 #endif
 		case SRC_DS: /* SRC_DS will not yield a return value */

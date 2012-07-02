@@ -116,6 +116,22 @@ void nunchuk_query(void) {
 	}
 }
 
+int16_t nunchuk_get_range(uint8_t i, uint8_t max) {
+	switch (i) {
+		case NC_PITCH:
+			return max ? 90 : -90;
+			break;
+		case NC_ROLL:
+			return max ? 180 : -180;
+			break;
+		case NC_JOY_X:
+		case NC_JOY_Y:
+			return max ? 255 : 0;
+		default:
+			return 0;
+	}
+}
+
 void nunchuk_init(void) {
 	twi_start(NUNCHUK_ADDR<<1);
 	twi_write(0xF0);
