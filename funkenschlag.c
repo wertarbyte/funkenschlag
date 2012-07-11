@@ -242,6 +242,37 @@ int main(void) {
 			}
 
 		}
+#ifdef USE_LCD
+		//lcd_clear();
+		_delay_ms(2);
+		lcd_set_cursor(0, 0);
+		for (uint8_t i=0; i<N_CHANNELS && i<8; i++) {
+			uint8_t v = get_input_scaled(channel_source[i], 0, 7);
+			lcd_write(lcd_get_bargraph(v));
+		}
+		lcd_set_cursor(1, 0);
+		uint8_t sw[] = DS_SEND_AUX_SWITCHES;
+		for (uint8_t i=0; i<sizeof(sw)/sizeof(sw[0]) && i<8; i++) {
+			uint8_t n=sw[i];
+			if (n==0) {
+				lcd_write(' ');
+			} else {
+				switch (get_input_scaled(n, -1, 1)) {
+					case -1:
+						lcd_write('v');
+						break;
+					case  0:
+						lcd_write('-');
+						break;
+					case  1:
+						lcd_write('^');
+						break;
+					default:
+						lcd_write(' ');
+				}
+			}
+		}
+#endif
 	}
 	return 0;
 }

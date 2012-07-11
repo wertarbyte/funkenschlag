@@ -81,6 +81,11 @@ void lcd_init(void) {
 	lcd_set_cursor(1,0);
 	lcd_write_str("SCHLAG!");
 	_delay_ms(500);
+	lcd_clear();
+}
+
+void lcd_clear(void) {
+	lcd_cmd(LCD_CLEARDISPLAY);
 }
 
 void lcd_set_cursor(uint8_t l, uint8_t c) {

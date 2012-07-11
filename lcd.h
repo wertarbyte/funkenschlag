@@ -88,6 +88,7 @@
 
 void lcd_init(void);
 
+void lcd_clear(void);
 void lcd_write(char c);
 void lcd_write_str(const char *c);
 void lcd_write_int(int16_t t);
