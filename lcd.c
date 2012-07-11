@@ -31,6 +31,31 @@ static void lcd_data(uint8_t data) {
 	lcd_send(data, 0x40);
 }
 
+static void lcd_create_char(uint8_t slot, uint8_t map[]) {
+	slot &= 0x7;
+	lcd_cmd(LCD_SETCGRAMADDR | (slot << 3));
+	for (uint8_t i=0; i<8; i++) {
+		lcd_write(map[i]);
+	}
+}
+
+static void lcd_load_bargraph(void) {
+	uint8_t graph[8];
+	memset(graph, 0, 8);
+	for (uint8_t i=1; i<8; i++) {
+		graph[8-i] = 0xFF;
+		lcd_create_char(i, graph);
+	}
+}
+
+char lcd_get_bargraph(uint8_t i) {
+	switch (i) {
+		case 0:
+			return ' ';
+	}
+	return i & 0x7;
+}
+
 void lcd_init(void) {
 	uint16_t contrast = 0x0A;
 
@@ -50,10 +75,12 @@ void lcd_init(void) {
 	_delay_ms(2);
 	lcd_cmd(LCD_RETURNHOME);
 
+	lcd_load_bargraph();
 	lcd_set_cursor(0,0);
 	lcd_write_str("FUNKEN-");
 	lcd_set_cursor(1,0);
 	lcd_write_str("SCHLAG!");
+	_delay_ms(500);
 }
 
 void lcd_set_cursor(uint8_t l, uint8_t c) {

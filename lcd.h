@@ -94,3 +94,4 @@ void lcd_write_int(int16_t t);
 void lcd_write_uint(uint16_t t);
 
 void lcd_set_cursor(uint8_t c, uint8_t r);
+char lcd_get_bargraph(uint8_t);
