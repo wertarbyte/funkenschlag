@@ -1,5 +1,8 @@
 /*** Funkenschlag configuration file ***/
 
+// enable serial output?
+//#define ENABLE_SERIAL
+
 // use TWI?
 //#define ENABLE_TWI
 

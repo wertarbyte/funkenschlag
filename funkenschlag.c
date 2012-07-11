@@ -136,7 +136,9 @@ int main(void) {
 	VOL_DDR &= ~(1<<VOL_BIT);
 	VOL_PORT |= (1<<VOL_BIT); // enable pullup
 
+#ifdef ENABLE_SERIAL
 	serial_init();
+#endif
 #ifdef ENABLE_TWI
 	twi_init();
 #endif

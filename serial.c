@@ -5,6 +5,9 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
+#include "config.h"
+
+#ifdef ENABLE_SERIAL
 
 #if defined(UCSRA) /* e.g. ATMega 8*/
 	#define UART_CONF_A UCSRA
@@ -73,3 +76,10 @@ void serial_write_uint(uint16_t i) {
 	snprintf(str, 10, "%u", i);
 	serial_write_str(str);
 }
+
+#else
+void serial_write(char c) {};
+void serial_write_str(const char *c) {};
+void serial_write_int(int16_t i) {};
+void serial_write_uint(uint16_t u) {};
+#endif
