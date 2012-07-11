@@ -6,10 +6,15 @@
 #include <avr/interrupt.h>
 #include <util/twi.h>
 #include "twi.h"
+#include "config.h"
+
+#ifndef TWI_BITRATE
+#define TWI_BITRATE 100000UL
+#endif
 
 void twi_init(void) {
 	TWSR = 0;
-	TWBR = (F_CPU / 100000UL - 16) / 2;
+	TWBR = (F_CPU / (TWI_BITRATE) - 16) / 2;
 	TWCR = 1<<TWEN;
 }
 

@@ -6,6 +6,9 @@
 // use TWI?
 //#define ENABLE_TWI
 
+// use custom TWI bitrate?
+//#define TWI_BITRATE 100000UL
+
 /* ADC configuration */
 
 // enable ADC4 and ADC5 - cannot be used in conjunction with TWI/I²c!
