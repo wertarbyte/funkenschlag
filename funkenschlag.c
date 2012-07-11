@@ -17,6 +17,7 @@
 #include "input.h"
 #include "datenschlag_structs.h"
 #include "mag.h"
+#include "lcd.h"
 
 
 #define PPM_DDR  DDRB
@@ -154,6 +155,9 @@ int main(void) {
 #endif
 #if defined(USE_MAG)
 	mag_init();
+#endif
+#if defined(USE_LCD)
+	lcd_init();
 #endif
 
 	/* configure watchfog timer to reset after 60ms */

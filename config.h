@@ -17,6 +17,9 @@
 // change orientation of compass sensor
 //#define MAG_ORIENTATION(X, Y, Z)  {mag_data[M_X]  = -(X); mag_data[M_Y]  = (Y); mag_data[M_Z]  = (Z);}
 
+// use I²C LCD (ST7032i)
+//#define USE_LCD
+
 /* Datenschlag configuration */
 
 #define DS_RETRANSMITS 0
