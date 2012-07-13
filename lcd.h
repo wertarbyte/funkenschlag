@@ -89,6 +89,7 @@
 #define LCD_CHAR_OMEGA		0x1E
 
 void lcd_init(void);
+void lcd_splash(void);
 
 void lcd_clear(void);
 void lcd_write(char c);

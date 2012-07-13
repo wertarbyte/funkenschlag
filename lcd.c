@@ -83,12 +83,6 @@ void lcd_init(void) {
 	lcd_cmd(LCD_RETURNHOME);
 
 	lcd_load_bargraph();
-	lcd_set_cursor(0,0);
-	lcd_write_str("FUNKEN-");
-	lcd_set_cursor(1,0);
-	lcd_write_str("SCHLAG!");
-	_delay_ms(500);
-	lcd_clear();
 }
 
 static void lcd_char_demo(void) {
@@ -135,5 +129,14 @@ void lcd_write_uint(uint16_t i) {
 	char str[10];
 	snprintf(str, 10, "%u", i);
 	lcd_write_str(str);
+}
+
+void lcd_splash(void) {
+	lcd_set_cursor(0,0);
+	lcd_write_str("FUNKEN-");
+	lcd_set_cursor(1,0);
+	lcd_write_str("SCHLAG!");
+	_delay_ms(1000);
+	lcd_clear();
 }
 #endif

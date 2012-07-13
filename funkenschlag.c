@@ -161,7 +161,11 @@ int main(void) {
 	mag_init();
 #endif
 #if defined(USE_LCD)
+	/* initialize LCD twice (due to timing issues?) */
 	lcd_init();
+	_delay_ms(500);
+	lcd_init();
+	lcd_splash();
 #endif
 
 	/* configure watchfog timer to reset after 60ms */
