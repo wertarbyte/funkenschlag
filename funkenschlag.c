@@ -125,6 +125,83 @@ static void start_ppm_pulse(void) {
 	}
 }
 
+static void status_lcd(void) {
+#ifdef USE_LCD
+	static enum {
+#ifdef DS_SEND_AUX_SWITCHES
+		STATUS_LCD_SWITCHES,
+#endif
+#ifdef USE_MAG
+		STATUS_LCD_MAG,
+#endif
+
+		STATUS_LCD_MAX
+	} status_lcd_state;
+	static uint32_t next_update;
+	if (millis < next_update) {
+		return;
+	}
+	next_update = millis+100;
+
+	static uint32_t next_switch;
+	if (millis > next_switch) {
+		status_lcd_state++;
+		if (status_lcd_state == STATUS_LCD_MAX) status_lcd_state = 0;
+		next_switch = millis+2000;
+	}
+
+	lcd_set_cursor(0, 0);
+	for (uint8_t i=0; i<N_CHANNELS && i<8; i++) {
+		uint8_t v = get_input_scaled(channel_source[i], 0, 6);
+		lcd_write(lcd_get_bargraph(v));
+	}
+	lcd_set_cursor(1, 0);
+	switch (status_lcd_state) {
+#ifdef DS_SEND_AUX_SWITCHES
+		case STATUS_LCD_SWITCHES:
+			{
+				uint8_t sw[] = DS_SEND_AUX_SWITCHES;
+				for (uint8_t i=0; i<sizeof(sw)/sizeof(sw[0]) && i<8; i++) {
+					uint8_t n=sw[i];
+					if (n==0) {
+						lcd_write(' ');
+					} else {
+						switch (get_input_scaled(n, -1, 1)) {
+							case -1:
+								lcd_write('V');
+								break;
+							case  0:
+								lcd_write('-');
+								break;
+							case  1:
+								lcd_write(LCD_CHAR_CHEVRON_UP);
+								break;
+							default:
+								lcd_write(' ');
+						}
+					}
+				}
+			}
+			break;
+#endif
+#ifdef USE_MAG
+		case STATUS_LCD_MAG:
+			lcd_fwrite("%3u", mag_heading()/10);
+			lcd_write(LCD_CHAR_DEGREES);
+			lcd_write_str("    ");
+			break;
+#endif
+		default:
+			break;
+	}
+
+	lcd_set_cursor(1, 7);
+	if (low_voltage) {
+		lcd_write((millis/1000 % 2) ? LCD_CHAR_OMEGA : '!');
+	}
+#endif
+}
+
 int main(void) {
 	/* configure PPM output port */
 	PPM_DDR |= (1<<PPM_BIT);
@@ -244,42 +321,8 @@ int main(void) {
 		} else {
 			LED_PORT &= ~(1<<LED_BIT);
 		}
-#ifdef USE_LCD
-		lcd_set_cursor(0, 0);
-		for (uint8_t i=0; i<N_CHANNELS && i<8; i++) {
-			uint8_t v = get_input_scaled(channel_source[i], 0, 6);
-			lcd_write(lcd_get_bargraph(v));
-		}
-		lcd_set_cursor(1, 0);
-		uint8_t sw[] = DS_SEND_AUX_SWITCHES;
-		for (uint8_t i=0; i<sizeof(sw)/sizeof(sw[0]) && i<8; i++) {
-			uint8_t n=sw[i];
-			if (n==0) {
-				lcd_write(' ');
-			} else {
-				switch (get_input_scaled(n, -1, 1)) {
-					case -1:
-						lcd_write('V');
-						break;
-					case  0:
-						lcd_write('-');
-						break;
-					case  1:
-						lcd_write(0x17);
-						break;
-					default:
-						lcd_write(' ');
-				}
-			}
-		}
 
-		lcd_set_cursor(1, 7);
-		if (low_voltage) {
-			lcd_write((millis/1000 % 2) ? LCD_CHAR_OMEGA : '!');
-		} else if ((sizeof(sw)/sizeof(sw[0]))<8) {
-			lcd_write(' ');
-		}
-#endif
+		status_lcd();
 	}
 	return 0;
 }
