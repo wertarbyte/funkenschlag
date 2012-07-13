@@ -87,12 +87,15 @@
 #define LCD_CONTRAST_LOW_BYTE_MASK		0x0F		// Only used for bit masking (ST7032)
 
 #define LCD_CHAR_OMEGA		0x1E
+#define LCD_CHAR_CHEVRON_UP	0x17
+#define LCD_CHAR_DEGREES	0xDF
 
 void lcd_init(void);
 void lcd_splash(void);
 
 void lcd_clear(void);
 void lcd_write(char c);
+void lcd_fwrite(const char *format_string, ...);
 void lcd_write_str(const char *c);
 void lcd_write_int(int16_t t);
 void lcd_write_uint(uint16_t t);

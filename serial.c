@@ -6,6 +6,7 @@
 #include <avr/interrupt.h>
 #include <stdio.h>
 #include "config.h"
+#include "serial.h"
 
 #ifdef ENABLE_SERIAL
 
@@ -59,6 +60,15 @@ void serial_write(char c) {
 	UART_UDR = c;
 }
 
+void serial_fwrite(const char *format_string, ...) {
+	char str[64];
+	va_list args;
+	va_start(args, format_string);
+	vsnprintf(str, sizeof(str), format_string, args);
+	va_end(args);
+	serial_write_str(str);
+};
+
 void serial_write_str(char *s) {
 	while (*s) {
 		serial_write(*s++);
@@ -66,19 +76,16 @@ void serial_write_str(char *s) {
 }
 
 void serial_write_int(int16_t i) {
-	char str[10];
-	snprintf(str, 10, "%i", i);
-	serial_write_str(str);
+	serial_fwrite("%i", i);
 }
 
 void serial_write_uint(uint16_t i) {
-	char str[10];
-	snprintf(str, 10, "%u", i);
-	serial_write_str(str);
+	serial_fwrite("%u", i);
 }
 
 #else
 void serial_write(char c) {};
+void serial_fwrite(const char *fmt, ...) {};
 void serial_write_str(const char *c) {};
 void serial_write_int(int16_t i) {};
 void serial_write_uint(uint16_t u) {};

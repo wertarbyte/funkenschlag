@@ -120,14 +120,19 @@ void lcd_write_str(const char *s) {
 }
 
 void lcd_write_int(int16_t i) {
-	char str[10];
-	snprintf(str, 10, "%i", i);
-	lcd_write_str(str);
+	lcd_fwrite("%i", i);
 }
 
 void lcd_write_uint(uint16_t i) {
+	lcd_fwrite("%u", i);
+}
+
+void lcd_fwrite(const char *format_string, ...) {
 	char str[10];
-	snprintf(str, 10, "%u", i);
+	va_list args;
+	va_start(args, format_string);
+	vsnprintf(str, sizeof(str), format_string, args);
+	va_end(args);
 	lcd_write_str(str);
 }
 
