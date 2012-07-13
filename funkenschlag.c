@@ -65,6 +65,8 @@ static uint16_t frame_times[N_CHANNELS] = {0};
 /* milliseconds since startup */
 static volatile uint32_t millis = 0;
 
+static uint8_t low_voltage = 0;
+
 static void set_ppm(uint8_t h) {
 	if (h) {
 		PPM_PORT |= 1<<PPM_BIT;
@@ -230,21 +232,15 @@ int main(void) {
 #endif
 
 		/* check voltage */
-		if ((~VOL_PIN) & 1<<VOL_BIT) {
-			// everything OK
+		low_voltage = !((~VOL_PIN) & 1<<VOL_BIT);
+
+		/* switch LED */
+		if (!low_voltage || (millis/250 % 2)) {
 			LED_PORT |= (1<<LED_BIT);
 		} else {
-			// voltage dropped, alert the user!
-			if (millis/250 % 2) {
-				LED_PORT |= (1<<LED_BIT);
-			} else {
-				LED_PORT &= ~(1<<LED_BIT);
-			}
-
+			LED_PORT &= ~(1<<LED_BIT);
 		}
 #ifdef USE_LCD
-		//lcd_clear();
-		_delay_ms(2);
 		lcd_set_cursor(0, 0);
 		for (uint8_t i=0; i<N_CHANNELS && i<8; i++) {
 			uint8_t v = get_input_scaled(channel_source[i], 0, 6);
@@ -271,6 +267,13 @@ int main(void) {
 						lcd_write(' ');
 				}
 			}
+		}
+
+		lcd_set_cursor(1, 7);
+		if (low_voltage) {
+			lcd_write((millis/1000 % 2) ? LCD_CHAR_OMEGA : '!');
+		} else if ((sizeof(sw)/sizeof(sw[0]))<8) {
+			lcd_write(' ');
 		}
 #endif
 	}

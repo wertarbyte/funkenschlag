@@ -91,6 +91,21 @@ void lcd_init(void) {
 	lcd_clear();
 }
 
+static void lcd_char_demo(void) {
+	for (uint8_t m=0; m<32; m++) {
+		lcd_clear();
+		_delay_ms(500);
+		lcd_set_cursor(0,0);
+		lcd_write('H');
+		lcd_write_uint(m);
+		lcd_set_cursor(1,0);
+		for (int j=0; j<8; j++) {
+			lcd_write(m*8+j);
+		}
+		_delay_ms(2000);
+	}
+}
+
 void lcd_clear(void) {
 	lcd_cmd(LCD_CLEARDISPLAY);
 }

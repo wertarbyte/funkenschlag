@@ -86,6 +86,8 @@
 #define LCD_CONTRAST_LOW_BYTE			0x70		// Command (ST7032)
 #define LCD_CONTRAST_LOW_BYTE_MASK		0x0F		// Only used for bit masking (ST7032)
 
+#define LCD_CHAR_OMEGA		0x1E
+
 void lcd_init(void);
 
 void lcd_clear(void);
