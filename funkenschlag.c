@@ -247,7 +247,7 @@ int main(void) {
 		_delay_ms(2);
 		lcd_set_cursor(0, 0);
 		for (uint8_t i=0; i<N_CHANNELS && i<8; i++) {
-			uint8_t v = get_input_scaled(channel_source[i], 0, 7);
+			uint8_t v = get_input_scaled(channel_source[i], 0, 6);
 			lcd_write(lcd_get_bargraph(v));
 		}
 		lcd_set_cursor(1, 0);
@@ -259,13 +259,13 @@ int main(void) {
 			} else {
 				switch (get_input_scaled(n, -1, 1)) {
 					case -1:
-						lcd_write('v');
+						lcd_write('V');
 						break;
 					case  0:
 						lcd_write('-');
 						break;
 					case  1:
-						lcd_write('^');
+						lcd_write(0x17);
 						break;
 					default:
 						lcd_write(' ');

@@ -42,8 +42,13 @@ static void lcd_create_char(uint8_t slot, uint8_t map[]) {
 static void lcd_load_bargraph(void) {
 	uint8_t graph[8];
 	memset(graph, 0, 8);
-	for (uint8_t i=1; i<8; i++) {
-		graph[8-i] = 0xFF;
+	/* we only generate bars for 2-6
+	 * since 0 and 1 are free lunch
+	 * (line 7 is the cursor)
+	 */
+	graph[6] = 0xFF;
+	for (uint8_t i=2; i<7; i++) {
+		graph[7-i] = 0xFF;
 		lcd_create_char(i, graph);
 	}
 }
@@ -52,6 +57,8 @@ char lcd_get_bargraph(uint8_t i) {
 	switch (i) {
 		case 0:
 			return ' ';
+		case 1:
+			return '_';
 	}
 	return i & 0x7;
 }
