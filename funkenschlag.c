@@ -167,7 +167,7 @@ static void status_lcd(void) {
 				for (uint8_t i=0; i<sizeof(sw)/sizeof(sw[0]) && i<8; i++) {
 					uint8_t n=sw[i];
 					if (n==0) {
-						lcd_write(' ');
+						lcd_write('_');
 					} else {
 						switch (get_input_scaled(n, -1, 1)) {
 							case -1:
