@@ -52,8 +52,18 @@ void mag_query(void) {
 uint16_t mag_heading(void) {
 	float heading = atan2(mag_data[M_Y], mag_data[M_X]);
 	if (heading < 0) heading += 2*M_PI;
-	uint16_t headingCentiDegrees = heading * 18000/M_PI;
-	return headingCentiDegrees;
+	uint16_t headingDeciDegrees = heading * 1800/M_PI;
+	return headingDeciDegrees;
+}
+
+void mag_dump(void) {
+	serial_write_str("MAG: ");
+	for (uint8_t i=0; i<3; i++) {
+		serial_write_int(mag_data[i]);
+		serial_write(' ');
+	}
+	serial_write_int( mag_heading() );
+	serial_write('\n');
 }
 
 #endif
