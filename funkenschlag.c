@@ -128,10 +128,10 @@ static void start_ppm_pulse(void) {
 static void status_lcd(void) {
 #ifdef USE_LCD
 	static enum {
-#ifdef DS_SEND_AUX_SWITCHES
+#ifdef LCD_SHOW_DS_SWITCHES
 		STATUS_LCD_SWITCHES,
 #endif
-#ifdef USE_MAG
+#ifdef LCD_SHOW_MAG
 		STATUS_LCD_MAG,
 #endif
 #ifdef LCD_SHOW_TIMER
@@ -160,7 +160,7 @@ static void status_lcd(void) {
 	}
 	lcd_set_cursor(1, 0);
 	switch (status_lcd_state) {
-#ifdef DS_SEND_AUX_SWITCHES
+#ifdef LCD_SHOW_DS_SWITCHES
 		case STATUS_LCD_SWITCHES:
 			{
 				uint8_t sw[] = DS_SEND_AUX_SWITCHES;
@@ -187,7 +187,7 @@ static void status_lcd(void) {
 			}
 			break;
 #endif
-#ifdef USE_MAG
+#ifdef LCD_SHOW_MAG
 		case STATUS_LCD_MAG:
 			lcd_fwrite("%3u", mag_heading()/10);
 			lcd_write(LCD_CHAR_DEGREES);
@@ -206,11 +206,12 @@ static void status_lcd(void) {
 		default:
 			break;
 	}
-
+#ifdef LCD_SHOW_BATTERY_WARNING
 	lcd_set_cursor(1, 7);
 	if (low_voltage) {
 		lcd_write((millis/1000 % 2) ? LCD_CHAR_OMEGA : '!');
 	}
+#endif
 #endif
 }
 

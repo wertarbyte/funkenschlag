@@ -28,6 +28,12 @@
 
 // show timer on LCD
 //#define LCD_SHOW_TIMER
+// show status of Datenschlag switches
+//#define LCD_SHOW_DS_SWITCHES
+// show magnetic compass heading
+//#define LCD_SHOW_MAG
+// display battery warning on top of LCD
+//#define LCD_SHOW_BATTERY_WARNING
 
 /* Datenschlag configuration */
 
