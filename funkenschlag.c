@@ -255,7 +255,7 @@ int main(void) {
 #if defined(USE_LCD)
 	/* initialize LCD twice (due to timing issues?) */
 	lcd_init();
-	_delay_ms(500);
+	_delay_ms(100);
 	lcd_init();
 	lcd_splash();
 #endif

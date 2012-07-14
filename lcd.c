@@ -74,7 +74,7 @@ void lcd_init(void) {
 	lcd_cmd(LCD_FUNCTIONSET | _lcd_basic);
 	lcd_cmd(LCD_FUNCTIONSET | _lcd_extended);
 
-	lcd_cmd(LCD_BIAS_OSC_CONTROL | LCD_BIAS1_5 | LCD_OSC_192);
+	lcd_cmd(LCD_BIAS_OSC_CONTROL | LCD_BIAS1_4 | LCD_OSC_347);
 	lcd_cmd(LCD_CONTRAST_LOW_BYTE | (contrast & LCD_CONTRAST_LOW_BYTE_MASK));
 	lcd_cmd(LCD_ICON_CONTRAST_HIGH_BYTE | LCD_ICON_ON | LCD_BOOSTER_ON | (contrast >> 4 & LCD_CONTRAST_HIGH_BYTE_MASK));
 	lcd_cmd(LCD_FOLLOWER_CONTROL | LCD_FOLLOWER_ON | LCD_Rab_2_00);
