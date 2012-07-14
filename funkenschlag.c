@@ -134,6 +134,9 @@ static void status_lcd(void) {
 #ifdef USE_MAG
 		STATUS_LCD_MAG,
 #endif
+#ifdef LCD_SHOW_TIMER
+		STATUS_LCD_TIMER,
+#endif
 
 		STATUS_LCD_MAX
 	} status_lcd_state;
@@ -189,6 +192,15 @@ static void status_lcd(void) {
 			lcd_fwrite("%3u", mag_heading()/10);
 			lcd_write(LCD_CHAR_DEGREES);
 			lcd_write_str("    ");
+			break;
+#endif
+#ifdef LCD_SHOW_TIMER
+		case STATUS_LCD_TIMER:
+			{
+				uint8_t minutes = millis/1000/60;
+				uint8_t seconds = (millis/1000)%60;
+				lcd_fwrite("%3u:%02u  ", minutes, seconds);;
+			}
 			break;
 #endif
 		default:

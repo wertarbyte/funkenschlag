@@ -26,6 +26,9 @@
 // use I²C LCD (ST7032i)
 //#define USE_LCD
 
+// show timer on LCD
+//#define LCD_SHOW_TIMER
+
 /* Datenschlag configuration */
 
 #define DS_RETRANSMITS 0
