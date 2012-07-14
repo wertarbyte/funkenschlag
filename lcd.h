@@ -89,6 +89,8 @@
 #define LCD_CHAR_OMEGA		0x1E
 #define LCD_CHAR_CHEVRON_UP	0x17
 #define LCD_CHAR_DEGREES	0xDF
+#define LCD_CHAR_ARROW_RIGHT	0x7E
+#define LCD_CHAR_ARROW_LEFT	0x7F
 
 void lcd_init(void);
 void lcd_splash(void);

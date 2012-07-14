@@ -63,6 +63,11 @@ char lcd_get_bargraph(uint8_t i) {
 	return i & 0x7;
 }
 
+void lcd_load_icons(void) {
+	uint8_t clock[8] = {0x0,0xe,0x15,0x17,0x11,0xe,0x0};
+	lcd_create_char(0, clock);
+}
+
 void lcd_init(void) {
 	uint16_t contrast = 0x0A;
 
@@ -83,6 +88,7 @@ void lcd_init(void) {
 	lcd_cmd(LCD_RETURNHOME);
 
 	lcd_load_bargraph();
+	lcd_load_icons();
 }
 
 static void lcd_char_demo(void) {
