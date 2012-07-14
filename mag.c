@@ -23,6 +23,8 @@
 
 static int16_t mag_data[3];
 
+static uint16_t mag_bearing;
+
 #define M_X 0
 #define M_Y 1
 #define M_Z 2
@@ -47,13 +49,15 @@ void mag_query(void) {
 	MAG_ORIENTATION(buf[0]<<8 | buf[1],
 			buf[4]<<8 | buf[5],
 			buf[2]<<8 | buf[3]);
+
+	/* calculate compass bearing in deci-degrees */
+	float heading = atan2(mag_data[M_Y], mag_data[M_X]);
+	if (heading < 0) heading += 2*M_PI;
+	mag_bearing = heading * 1800/M_PI;
 }
 
 uint16_t mag_heading(void) {
-	float heading = atan2(mag_data[M_Y], mag_data[M_X]);
-	if (heading < 0) heading += 2*M_PI;
-	uint16_t headingDeciDegrees = heading * 1800/M_PI;
-	return headingDeciDegrees;
+	return mag_bearing;
 }
 
 void mag_dump(void) {
