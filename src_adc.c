@@ -52,11 +52,11 @@ static int16_t read_adc(uint8_t adc) {
 		result += ADC;
 	}
 	result /= ADC_READS;
-	adc_raw[adc] = result;
 	/* is this axis inverted? */
 	if (adc_invert[adc/(8*sizeof(*adc_invert))] & 1<<(adc%(8*sizeof(*adc_invert)))) {
 		result = 1023-result;
 	}
+	adc_raw[adc] = result;
 
 	/* adjust the channel value */
 	result += adc_trim[adc];
