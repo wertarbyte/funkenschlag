@@ -56,10 +56,16 @@ static int16_t read_adc(uint8_t adc) {
 	if (adc_invert[adc/(8*sizeof(*adc_invert))] & 1<<(adc%(8*sizeof(*adc_invert)))) {
 		result = 1023-result;
 	}
-	adc_raw[adc] = result;
 
 	/* adjust the channel value */
 	result += adc_trim[adc];
+	if (result < 0) {
+		adc_raw[adc] = 0;
+	} else if (result > 1023) {
+		adc_raw[adc] = 1023;
+	} else {
+		adc_raw[adc] = result;
+	}
 	if (adc_scale[adc]) {
 		int32_t d = (int32_t)1023/2 - result;
 		int32_t nd = (d*(100+adc_scale[adc])/(100));
