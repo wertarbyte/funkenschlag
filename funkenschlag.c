@@ -153,11 +153,38 @@ static void status_lcd(void) {
 		next_switch = millis+2000;
 	}
 
+#ifdef LCD_SHOW_CHANNELS
 	lcd_set_cursor(0, 0);
 	for (uint8_t i=0; i<N_CHANNELS && i<8; i++) {
 		uint8_t v = get_input_scaled(channel_source[i], 0, 6);
 		lcd_write(lcd_get_bargraph(v));
 	}
+#elif defined(LCD_SHOW_CROSSHAIRS)
+#ifndef LCD_CROSSHAIR_INPUTS
+#define LCD_CROSSHAIR_INPUTS { {channel_source[3], channel_source[2]}, {channel_source[0], channel_source[1]} }
+#endif
+	isrc_t ch_input[2][2] = LCD_CROSSHAIR_INPUTS;
+
+	lcd_create_crosshair( ch_input[0][0], ch_input[0][1], 6);
+	lcd_create_crosshair( ch_input[1][0], ch_input[1][1], 7);
+#ifdef LCD_CROSSHAIR_BAR_LEFT
+	lcd_create_bargraph(LCD_CROSSHAIR_BAR_LEFT, 4);
+#endif
+#ifdef LCD_CROSSHAIR_BAR_RIGHT
+	lcd_create_bargraph(LCD_CROSSHAIR_BAR_RIGHT, 5);
+#endif
+	lcd_set_cursor(0,0);
+	lcd_write(6);
+#ifdef LCD_CROSSHAIR_BAR_LEFT
+	lcd_write(4);
+#endif
+#ifdef LCD_CROSSHAIR_BAR_RIGHT
+	lcd_set_cursor(0,6);
+	lcd_write(5);
+#endif
+	lcd_set_cursor(0,7);
+	lcd_write(7);
+#endif
 	lcd_set_cursor(1, 0);
 	switch (status_lcd_state) {
 #ifdef LCD_SHOW_DS_SWITCHES

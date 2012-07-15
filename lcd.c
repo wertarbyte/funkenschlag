@@ -9,6 +9,7 @@
 #include "config.h"
 #include "twi.h"
 #include "lcd.h"
+#include "input.h"
 
 #ifdef USE_LCD
 
@@ -39,6 +40,7 @@ static void lcd_create_char(uint8_t slot, uint8_t map[]) {
 	}
 }
 
+#ifdef LCD_SHOW_CHANNELS
 static void lcd_load_bargraph(void) {
 	uint8_t graph[8];
 	memset(graph, 0, 8);
@@ -62,11 +64,32 @@ char lcd_get_bargraph(uint8_t i) {
 	}
 	return i & 0x7;
 }
+#endif
 
 void lcd_load_icons(void) {
 	uint8_t clock[8] = {0x0,0xe,0x15,0x17,0x11,0xe,0x0};
 	lcd_create_char(0, clock);
 }
+
+#ifdef LCD_SHOW_CROSSHAIRS
+void lcd_create_crosshair(isrc_t xd, isrc_t yd, uint8_t slot) {
+	uint8_t x = get_input_scaled(xd, 4, 0);
+	uint8_t y = get_input_scaled(yd, 7, 0);
+	uint8_t g[8];
+	memset(g, (1<<(x)), sizeof(g));
+	g[y] ^= 0xFF;
+	lcd_create_char(slot, g);
+}
+
+/* create bargraph on the fly */
+void lcd_create_bargraph(isrc_t bd, uint8_t slot) {
+	uint8_t g[8];
+	uint8_t y = get_input_scaled(bd, 0, sizeof(g)-1);
+	memset(g, 0xFF, sizeof(g));
+	memset(g, 0x00, 7-y);
+	lcd_create_char(slot, g);
+}
+#endif
 
 void lcd_init(void) {
 	uint16_t contrast = 0x0A;
@@ -83,11 +106,13 @@ void lcd_init(void) {
 	lcd_cmd(LCD_DISPLAYCONTROL | LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF);
 	lcd_cmd(LCD_ENTRYMODESET | LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT);
 
-	lcd_cmd(LCD_CLEARDISPLAY);
+	lcd_clear();
 	_delay_ms(2);
 	lcd_cmd(LCD_RETURNHOME);
 
+#ifdef LCD_SHOW_CHANNELS
 	lcd_load_bargraph();
+#endif
 	lcd_load_icons();
 }
 
@@ -143,11 +168,13 @@ void lcd_fwrite(const char *format_string, ...) {
 }
 
 void lcd_splash(void) {
+#ifdef LCD_SPLASH_SCREEN
 	lcd_set_cursor(0,0);
 	lcd_write_str("FUNKEN-");
 	lcd_set_cursor(1,0);
 	lcd_write_str("SCHLAG!");
 	_delay_ms(1000);
 	lcd_clear();
+#endif
 }
 #endif

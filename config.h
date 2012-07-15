@@ -26,6 +26,19 @@
 // use I²C LCD (ST7032i)
 //#define USE_LCD
 
+// who LCD splash screen on startup
+//#define LCD_SPLASH_SCREEN
+
+// show channel status on LCD
+//#define LCD_SHOW_CHANNELS
+// OR: show crosshairs of stick positions
+//#define LCD_SHOW_CROSSHAIRS
+// explicitely define input sources for crosshairs
+//#define LCD_CROSSHAIR_INPUTS { {channel_source[3], channel_source[2]}, {channel_source[0], channel_source[1]} }
+// display bargraphs alongside the crosshairs
+//#define LCD_CROSSHAIR_BAR_RIGHT channel_source[6]
+//#define LCD_CROSSHAIR_BAR_LEFT  channel_source[7]
+
 // show timer on LCD
 //#define LCD_SHOW_TIMER
 // show status of Datenschlag switches

@@ -1,3 +1,5 @@
+#include "input.h"
+
 #define LCD_CLEARDISPLAY			0x01		// Command (HD44780)			Page 21
 #define LCD_RETURNHOME				0x02		// Command (HD44780)
 
@@ -104,3 +106,5 @@ void lcd_write_uint(uint16_t t);
 
 void lcd_set_cursor(uint8_t c, uint8_t r);
 char lcd_get_bargraph(uint8_t);
+void lcd_create_crosshair(isrc_t xd, isrc_t yd, uint8_t slot);
+void lcd_create_bargraph(isrc_t bd, uint8_t slot);
