@@ -5,6 +5,7 @@
 #include <avr/wdt.h>
 #include <util/delay.h>
 #include <string.h>
+#include <math.h>
 #include "config.h"
 #include "serial.h"
 #include "src_nunchuk.h"

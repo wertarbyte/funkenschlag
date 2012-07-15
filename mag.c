@@ -6,6 +6,7 @@
 #include <avr/interrupt.h>
 #include <stdio.h>
 #include <util/delay.h>
+#include <math.h>
 #include "twi.h"
 #include "mag.h"
 #include "serial.h"
