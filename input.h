@@ -5,7 +5,10 @@
 #define SRC_TWI_ADC  4
 #define SRC_NUNCHUK 5
 
+#ifndef TYPEDEF_ISRC_T
+#define TYPEDEF_ISRC_T
 typedef uint8_t isrc_t;
+#endif
 
 #define SRC_ID(s,n) ( (((s)&0x0F)<<4) | ((n)&0x0F) )
 
