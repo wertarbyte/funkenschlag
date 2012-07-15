@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-int16_t get_input_range(uint8_t src, uint8_t max) {
+int16_t get_input_range(isrc_t src, uint8_t max) {
 	int16_t val = 0;
 	switch (SRC_SYS(src)) {
 		case SRC_ADC:
@@ -34,7 +34,7 @@ int16_t get_input_range(uint8_t src, uint8_t max) {
 	return val;
 }
 
-int16_t get_input(uint8_t src) {
+int16_t get_input(isrc_t src) {
 	int16_t val = 0;
 	switch (SRC_SYS(src)) {
 		case SRC_ADC:
@@ -61,7 +61,7 @@ int16_t get_input(uint8_t src) {
 	return val;
 }
 
-int16_t get_input_scaled(uint8_t src, int16_t min, int16_t max) {
+int16_t get_input_scaled(isrc_t src, int16_t min, int16_t max) {
 	int32_t smax = get_input_range(src, 1);
 	int32_t smin = get_input_range(src, 0);
 	int32_t value = get_input(src);
