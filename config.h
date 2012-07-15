@@ -75,3 +75,8 @@
 //#define USE_NUNCHUK
 // angle at which the control is at maximum
 //#define NUNCHUK_CTRL_ANGLE 50
+
+
+/* debugging */
+// enable data dump methods
+//#define ENABLE_DEBUG_SERIAL_DUMP

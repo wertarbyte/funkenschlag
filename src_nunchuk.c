@@ -46,6 +46,7 @@ int16_t nunchuk_get_raw(uint8_t n) {
 }
 
 void nunchuk_dump(void) {
+#ifdef ENABLE_DEBUG_SERIAL_DUMP
 	serial_write_str("Nunchuk: ");
 	for (uint8_t i=NC_ROLL; i<=NC_JOY_Y; i++) {
 		serial_write_int(nunchuk_raw[i]);
@@ -58,6 +59,7 @@ void nunchuk_dump(void) {
 	}
 	serial_write(')');
 	serial_write('\n');
+#endif
 }
 
 void nunchuk_query(void) {

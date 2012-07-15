@@ -61,6 +61,7 @@ uint16_t mag_heading(void) {
 }
 
 void mag_dump(void) {
+#ifdef ENABLE_DEBUG_SERIAL_DUMP
 	serial_write_str("MAG: ");
 	for (uint8_t i=0; i<3; i++) {
 		serial_write_int(mag_data[i]);
@@ -68,6 +69,7 @@ void mag_dump(void) {
 	}
 	serial_write_int( mag_heading() );
 	serial_write('\n');
+#endif
 }
 
 #endif
