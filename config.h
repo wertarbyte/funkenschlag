@@ -31,6 +31,9 @@
 
 // show channel status on LCD
 //#define LCD_SHOW_CHANNELS
+// explicitely define input sources for bargraphs (otherwise channel sources are used)
+//#define LCD_CHANNEL_INPUTS { SRC_ID(SRC_ADC, 0), SRC_ID(SRC_ADC, 1), SRC_ID(SRC_ADC, 2), SRC_ID(SRC_ADC, 3), 0, 0, SRC_ID(SRC_TWI_ADC, 0), SRC_ID(SRC_TWI_ADC, 1) }
+
 // OR: show crosshairs of stick positions
 //#define LCD_SHOW_CROSSHAIRS
 // explicitely define input sources for crosshairs

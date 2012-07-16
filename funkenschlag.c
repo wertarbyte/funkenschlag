@@ -40,7 +40,7 @@
 
 #include "config.h"
 
-static uint8_t channel_source[] = {
+static isrc_t channel_source[] = {
 	SRC_ID(SRC_ADC, 0),
 	SRC_ID(SRC_ADC, 1),
 	SRC_ID(SRC_ADC, 2),
@@ -155,8 +155,16 @@ static void status_lcd(void) {
 
 #ifdef LCD_SHOW_CHANNELS
 	lcd_set_cursor(0, 0);
-	for (uint8_t i=0; i<N_CHANNELS && i<8; i++) {
-		uint8_t v = get_input_scaled(channel_source[i], 0, 6);
+#ifndef LCD_CHANNEL_INPUTS
+	isrc_t *ch_inp = channel_source;
+#define LCD_CHANNEL_COUNT N_CHANNELS
+#else
+	isrc_t ch[] = LCD_CHANNEL_INPUTS;
+	isrc_t *ch_inp = ch;
+#define LCD_CHANNEL_COUNT ( sizeof(ch)/sizeof(*ch) )
+#endif
+	for (uint8_t i=0; i<LCD_CHANNEL_COUNT && i<8; i++) {
+		isrc_t v = get_input_scaled(ch_inp[i], 0, 6);
 		lcd_write(lcd_get_bargraph(v));
 	}
 #elif defined(LCD_SHOW_CROSSHAIRS)
