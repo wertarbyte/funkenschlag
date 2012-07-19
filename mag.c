@@ -9,6 +9,7 @@
 #include <math.h>
 #include "twi.h"
 #include "mag.h"
+#include "acc.h"
 #include "serial.h"
 #include "config.h"
 
@@ -17,6 +18,7 @@
 /* HMC5883 */
 #define MAG_ADDRESS 0x1E
 #define MAG_DATA_REGISTER 0x03
+#define MAG_SCALE_FACTOR_13 0.92
 
 #ifndef MAG_ORIENTATION
 #define MAG_ORIENTATION(X, Y, Z)  {mag_data[M_X]  = -(X); mag_data[M_Y]  = -(Y); mag_data[M_Z]  = (Z);}
@@ -51,10 +53,35 @@ void mag_query(void) {
 			buf[4]<<8 | buf[5],
 			buf[2]<<8 | buf[3]);
 
+	float m_x = mag_data[M_X]*MAG_SCALE_FACTOR_13;
+	float m_y = mag_data[M_Y]*MAG_SCALE_FACTOR_13;
+	float m_z = mag_data[M_Z]*MAG_SCALE_FACTOR_13;
+
+#ifdef USE_ACC
+	float acc_data[3];
+	acc_get_scaled_data(acc_data);
+	float rollRadians = asin(acc_data[1]);
+	float pitchRadians = asin(acc_data[0]);
+	if (rollRadians > 0.78 || rollRadians < -0.78 || pitchRadians > 0.78 || pitchRadians < -0.78) {
+		mag_bearing = -1;
+		return;
+	}
+
+	float cosRoll = cos(rollRadians);
+	float sinRoll = sin(rollRadians);
+	float cosPitch = cos(pitchRadians);
+	float sinPitch = sin(pitchRadians);
+	float Xh = m_x * cosPitch + m_z * sinPitch;
+	float Yh = m_x * sinRoll * sinPitch + m_y * cosRoll - m_z * sinRoll * cosPitch;
+	float heading = atan2(Yh, Xh);
+#else
 	/* calculate compass bearing in deci-degrees */
-	float heading = atan2(mag_data[M_Y], mag_data[M_X]);
-	if (heading < 0) heading += 2*M_PI;
+	float heading = atan2(m_y, m_x);
+#endif
 	mag_bearing = heading * 1800/M_PI;
+	while (mag_bearing < 0) {
+		mag_bearing += 3600;
+	}
 }
 
 uint16_t mag_heading(void) {
