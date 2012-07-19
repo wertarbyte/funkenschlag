@@ -40,27 +40,13 @@
 
 #include "config.h"
 
-static isrc_t channel_source[] = {
-	SRC_ID(SRC_ADC, 0),
-	SRC_ID(SRC_ADC, 1),
-	SRC_ID(SRC_ADC, 2),
-	SRC_ID(SRC_ADC, 3),
-	SRC_ID(SRC_SW,  0),
-	SRC_ID(SRC_DS,  0),
-#ifdef USE_ADC4_ADC5
-	SRC_ID(SRC_ADC, 4),
-	SRC_ID(SRC_ADC, 5),
-#elif defined(USE_TWI_ADC)
-	SRC_ID(SRC_TWI_ADC, 0),
-	SRC_ID(SRC_TWI_ADC, 1),
-#endif
-};
-
-#define N_CHANNELS (sizeof(channel_source)/sizeof(*channel_source))
+extern isrc_t channel_source[];
+extern uint8_t channel_count;
 
 static uint8_t current_channel;
 static uint16_t frame_time_remaining = 0;
-static uint16_t frame_times[N_CHANNELS] = {0};
+#define MAX_CHANNELS 9
+static uint16_t frame_times[MAX_CHANNELS] = {0};
 
 /* milliseconds since startup */
 volatile uint32_t millis = 0;
@@ -107,14 +93,14 @@ static int16_t get_channel(uint8_t i) {
 static void start_ppm_frame(void) {
 	current_channel = 0;
 	frame_time_remaining = FRAME_US;
-	for (uint8_t i=0; i<N_CHANNELS; i++) {
+	for (uint8_t i=0; i<channel_count; i++) {
 		frame_times[i] = (1000+get_channel(i));
 		frame_time_remaining -= frame_times[i];
 	}
 }
 
 static void start_ppm_pulse(void) {
-	if (current_channel < N_CHANNELS) {
+	if (current_channel < channel_count) {
 		/* get the pulse width for the current channel */
 		OCR1A = frame_times[current_channel];
 		current_channel++;
