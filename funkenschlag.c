@@ -18,7 +18,7 @@
 #include "datenschlag_structs.h"
 #include "mag.h"
 #include "lcd.h"
-
+#include "lcd_status.h"
 
 #define PPM_DDR  DDRB
 #define PPM_PORT PORTB
@@ -63,9 +63,9 @@ static uint16_t frame_time_remaining = 0;
 static uint16_t frame_times[N_CHANNELS] = {0};
 
 /* milliseconds since startup */
-static volatile uint32_t millis = 0;
+volatile uint32_t millis = 0;
 
-static uint8_t low_voltage = 0;
+uint8_t low_voltage = 0;
 
 static void set_ppm(uint8_t h) {
 	if (h) {
@@ -123,133 +123,6 @@ static void start_ppm_pulse(void) {
 		OCR1A = frame_time_remaining;
 		start_ppm_frame();
 	}
-}
-
-static void status_lcd(void) {
-#ifdef USE_LCD
-	static enum {
-#ifdef LCD_SHOW_DS_SWITCHES
-		STATUS_LCD_SWITCHES,
-#endif
-#ifdef LCD_SHOW_MAG
-		STATUS_LCD_MAG,
-#endif
-#ifdef LCD_SHOW_TIMER
-		STATUS_LCD_TIMER,
-#endif
-
-		STATUS_LCD_MAX
-	} status_lcd_state;
-	static uint32_t next_update;
-	if (millis < next_update) {
-		return;
-	}
-	next_update = millis+100;
-
-	static uint32_t next_switch;
-	if (millis > next_switch) {
-		status_lcd_state++;
-		if (status_lcd_state == STATUS_LCD_MAX) status_lcd_state = 0;
-		next_switch = millis+2000;
-	}
-
-#ifdef LCD_SHOW_CHANNELS
-	lcd_set_cursor(0, 0);
-#ifndef LCD_CHANNEL_INPUTS
-	isrc_t *ch_inp = channel_source;
-#define LCD_CHANNEL_COUNT N_CHANNELS
-#else
-	isrc_t ch[] = LCD_CHANNEL_INPUTS;
-	isrc_t *ch_inp = ch;
-#define LCD_CHANNEL_COUNT ( sizeof(ch)/sizeof(*ch) )
-#endif
-	for (uint8_t i=0; i<LCD_CHANNEL_COUNT && i<8; i++) {
-		isrc_t v = get_input_scaled(ch_inp[i], 0, 6);
-		lcd_write(lcd_get_bargraph(v));
-	}
-#elif defined(LCD_SHOW_CROSSHAIRS)
-#ifndef LCD_CROSSHAIR_INPUTS
-#define LCD_CROSSHAIR_INPUTS { {channel_source[3], channel_source[2]}, {channel_source[0], channel_source[1]} }
-#endif
-	isrc_t ch_input[2][2] = LCD_CROSSHAIR_INPUTS;
-
-	lcd_create_crosshair( ch_input[0][0], ch_input[0][1], 6);
-	lcd_create_crosshair( ch_input[1][0], ch_input[1][1], 7);
-#ifdef LCD_CROSSHAIR_BAR_LEFT
-	lcd_create_bargraph(LCD_CROSSHAIR_BAR_LEFT, 4);
-#endif
-#ifdef LCD_CROSSHAIR_BAR_RIGHT
-	lcd_create_bargraph(LCD_CROSSHAIR_BAR_RIGHT, 5);
-#endif
-	lcd_set_cursor(0,0);
-	lcd_write(6);
-#ifdef LCD_CROSSHAIR_BAR_LEFT
-	lcd_write(4);
-#endif
-#ifdef LCD_CROSSHAIR_BAR_RIGHT
-	lcd_set_cursor(0,6);
-	lcd_write(5);
-#endif
-	lcd_set_cursor(0,7);
-	lcd_write(7);
-#endif
-	lcd_set_cursor(1, 0);
-	switch (status_lcd_state) {
-#ifdef LCD_SHOW_DS_SWITCHES
-		case STATUS_LCD_SWITCHES:
-			{
-				uint8_t sw[] = DS_SEND_AUX_SWITCHES;
-				for (uint8_t i=0; i<sizeof(sw)/sizeof(sw[0]) && i<8; i++) {
-					uint8_t n=sw[i];
-					if (n==0) {
-						lcd_write('_');
-					} else {
-						switch (get_input_scaled(n, -1, 1)) {
-							case -1:
-								lcd_write('V');
-								break;
-							case  0:
-								lcd_write('-');
-								break;
-							case  1:
-								lcd_write(LCD_CHAR_CHEVRON_UP);
-								break;
-							default:
-								lcd_write(' ');
-						}
-					}
-				}
-			}
-			break;
-#endif
-#ifdef LCD_SHOW_MAG
-		case STATUS_LCD_MAG:
-			lcd_write(LCD_CHAR_ARROW_RIGHT);
-			lcd_fwrite("%3u", mag_heading()/10);
-			lcd_write(LCD_CHAR_DEGREES);
-			lcd_write_str("   ");
-			break;
-#endif
-#ifdef LCD_SHOW_TIMER
-		case STATUS_LCD_TIMER:
-			{
-				uint8_t minutes = millis/1000/60;
-				uint8_t seconds = (millis/1000)%60;
-				lcd_write('\0');
-				lcd_fwrite("%2u:%02u  ", minutes, seconds);;
-			}
-			break;
-#endif
-		default:
-			break;
-	}
-#ifdef LCD_SHOW_BATTERY_WARNING
-	lcd_set_cursor(1, 7);
-	if (low_voltage) {
-		lcd_write((millis/1000 % 2) ? LCD_CHAR_OMEGA : '!');
-	}
-#endif
-#endif
 }
 
 int main(void) {
@@ -380,7 +253,9 @@ int main(void) {
 			LED_PORT &= ~(1<<LED_BIT);
 		}
 
-		status_lcd();
+#ifdef USE_LCD
+		lcd_status_update();
+#endif
 	}
 	return 0;
 }
