@@ -6,21 +6,7 @@ isrc_t channel_source[] =
 #ifdef CHANNEL_SRC
 	CHANNEL_SRC
 #else
-{
-	SRC_ID(SRC_ADC, 0),
-	SRC_ID(SRC_ADC, 1),
-	SRC_ID(SRC_ADC, 2),
-	SRC_ID(SRC_ADC, 3),
-	SRC_ID(SRC_SW,  0),
-	SRC_ID(SRC_DS,  0),
-#ifdef USE_ADC4_ADC5
-	SRC_ID(SRC_ADC, 4),
-	SRC_ID(SRC_ADC, 5),
-#elif defined(USE_TWI_ADC)
-	SRC_ID(SRC_TWI_ADC, 0),
-	SRC_ID(SRC_TWI_ADC, 1),
-#endif
-}
+#error "No channels have been defined. Please check CHANNEL_SRC in config.h."
 #endif
 ;
 

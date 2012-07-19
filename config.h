@@ -1,6 +1,6 @@
 /*** Funkenschlag configuration file ***/
 
-// set inputs for TX channels
+// set inputs for TX channels (mandatory!)
 //#define CHANNEL_SRC { SRC_ID(SRC_ADC, 0), SRC_ID(SRC_ADC, 1), SRC_ID(SRC_ADC, 2), SRC_ID(SRC_ADC, 3), SRC_ID(SRC_SW,  0), SRC_ID(SRC_SW,  1) }
 
 // enable serial output?
