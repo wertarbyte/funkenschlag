@@ -253,6 +253,8 @@ static void status_lcd(void) {
 }
 
 int main(void) {
+	wdt_enable(WDTO_4S);
+	wdt_reset();
 	/* configure PPM output port */
 	PPM_DDR |= (1<<PPM_BIT);
 	PPM_PORT &= ~(1<<PPM_BIT);
@@ -273,6 +275,7 @@ int main(void) {
 #endif
 #ifdef USE_NUNCHUK
 	nunchuk_init();
+	wdt_reset();
 #endif
 
 	/* configure switches */
@@ -283,15 +286,20 @@ int main(void) {
 
 #if defined(USE_TWI_ADC)
 	twi_adc_init();
+	wdt_reset();
 #endif
 #if defined(USE_MAG)
 	mag_init();
+	wdt_reset();
 #endif
 #if defined(USE_LCD)
 	/* initialize LCD twice (due to timing issues?) */
 	lcd_init();
+	wdt_reset();
 	_delay_ms(100);
+	wdt_reset();
 	lcd_init();
+	wdt_reset();
 	lcd_splash();
 #endif
 
