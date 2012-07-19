@@ -17,6 +17,7 @@
 #include "input.h"
 #include "datenschlag_structs.h"
 #include "mag.h"
+#include "acc.h"
 #include "lcd.h"
 #include "lcd_status.h"
 
@@ -151,6 +152,9 @@ int main(void) {
 	mag_init();
 	wdt_reset();
 #endif
+#if defined(USE_ACC)
+	acc_init();
+#endif
 #if defined(USE_LCD)
 	/* initialize LCD twice (due to timing issues?) */
 	lcd_init();
@@ -223,6 +227,10 @@ int main(void) {
 #endif
 #if defined(USE_MAG)
 		mag_query();
+#endif
+#if defined(USE_ACC)
+		acc_query();
+		acc_dump();
 #endif
 
 #ifdef USE_NUNCHUK

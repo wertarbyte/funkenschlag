@@ -23,8 +23,12 @@
 // enable I²C compass HMC5883
 //#define USE_MAG
 
+// enable I²C accelerometer ADXL345
+//#define USE_ACC
+
 // change orientation of compass sensor
 //#define MAG_ORIENTATION(X, Y, Z)  {mag_data[M_X]  = -(X); mag_data[M_Y]  = (Y); mag_data[M_Z]  = (Z);}
+//#define ACC_ORIENTATION(X, Y, Z)  {acc_data[A_X]  = -(X); acc_data[A_Y]  = (Y); acc_data[A_Z]  = (Z);}
 
 // use I²C LCD (ST7032i)
 //#define USE_LCD
