@@ -54,6 +54,9 @@
 // display battery warning on top of LCD
 //#define LCD_SHOW_BATTERY_WARNING
 
+// use input device to control lcd
+//#define LCD_CTRL_SWITCH SRC_ID(SRC_SW, 4)
+
 /* Datenschlag configuration */
 
 #define DS_RETRANSMITS 0

@@ -140,6 +140,8 @@ static void lcd_status_battery(uint8_t row) {
 
 void lcd_status_update(void) {
 #ifdef USE_LCD
+#define LCD_AUTO_SWITCH_INTERVAL 2000
+#define LCD_MANUAL_SWITCH_INTERVAL (3*(LCD_AUTO_SWITCH_INTERVAL))
 	static enum lcd_status_line status_lcd_state;
 	static uint32_t next_update;
 	if (millis < next_update) {
@@ -148,11 +150,30 @@ void lcd_status_update(void) {
 	next_update = millis+100;
 
 	static uint32_t next_switch;
+
+#ifdef LCD_CTRL_SWITCH
+	static int8_t old_sw_state = 0;
+	int8_t sw_state = get_input_scaled(LCD_CTRL_SWITCH, -1, 1);
+	if (sw_state != old_sw_state && sw_state > 0) {
+		status_lcd_state++;
+		next_switch = millis+2*(LCD_AUTO_SWITCH_INTERVAL);
+	}
+	if (sw_state != old_sw_state && sw_state < 0) {
+		if (status_lcd_state == 0) {
+			status_lcd_state = STATUS_LCD_MAX-1;
+		} else {
+			status_lcd_state--;
+		}
+		next_switch = millis+(LCD_MANUAL_SWITCH_INTERVAL);
+	}
+	old_sw_state = sw_state;
+#endif
+
 	if (millis > next_switch) {
 		status_lcd_state++;
-		if (status_lcd_state == STATUS_LCD_MAX) status_lcd_state = 0;
-		next_switch = millis+2000;
+		next_switch = millis+(LCD_AUTO_SWITCH_INTERVAL);
 	}
+	if (status_lcd_state >= STATUS_LCD_MAX) status_lcd_state = 0;
 
 	/* the first line is static */
 	lcd_status_channels(0);
