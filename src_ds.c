@@ -14,6 +14,35 @@
 #include "mag.h"
 #include "config.h"
 
+static void prepare_mag_heading(void) {
+	uint8_t ds_payload[DS_MAX_PAYLOAD_LENGTH] = {0};
+	memset(ds_payload, 0, sizeof(ds_payload));
+	/* send orientation */
+	#define DS_CMD_SET_HEADING (2<<5 | 0x04)
+	int16_t dir = 0; // set real orientation here
+#if defined(DS_HEADING_INPUT)
+	dir = get_input_scaled(DS_HEADING_INPUT, -180, 180);
+#elif defined(USE_MAG)
+	int16_t bearing = mag_heading();
+	if (bearing < 0) {
+		/* no valid compass data present, abort! */
+		return;
+	} else {
+		dir = mag_heading()/10;
+	}
+#else
+#error "DS_SEND_MAG_HEADING defined, but neither magnetometer (USE_MAG) or input source specified (DS_HEADING_INPUT)"
+#endif
+	if ( dir > 180) dir = dir - 360;
+	else if (dir < -180) dir = dir + 360;
+	ds_payload[0] = (dir&0xFF00)>>8;
+	ds_payload[1] = dir&0x00FF;
+	if (!ds_frame_queued(DS_CMD_SET_HEADING) && ds_frame_buffers_available()) {
+		ds_add_frame(DS_CMD_SET_HEADING, &ds_payload[0], 2);
+	}
+
+}
+
 void ds_prepare(void) {
 	#define DS_CMD_ANY 0xFF
 
@@ -53,24 +82,7 @@ void ds_prepare(void) {
 	}
 #endif
 #ifdef DS_SEND_MAG_HEADING
-	memset(ds_payload, 0, sizeof(ds_payload));
-	/* send orientation */
-	#define DS_CMD_SET_HEADING (2<<5 | 0x04)
-	int16_t dir = 0; // set real orientation here
-#if defined(DS_HEADING_INPUT)
-	dir = get_input_scaled(DS_HEADING_INPUT, -180, 180);
-#elif defined(USE_MAG)
-	dir = mag_heading()/10;
-#else
-#error "DS_SEND_MAG_HEADING defined, but neither magnetometer (USE_MAG) or input source specified (DS_HEADING_INPUT)"
-#endif
-	if ( dir > 180) dir = dir - 360;
-	else if (dir < -180) dir = dir + 360;
-	ds_payload[0] = (dir&0xFF00)>>8;
-	ds_payload[1] = dir&0x00FF;
-	if (!ds_frame_queued(DS_CMD_SET_HEADING) && ds_frame_buffers_available()) {
-		ds_add_frame(DS_CMD_SET_HEADING, &ds_payload[0], 2);
-	}
+	prepare_mag_heading();
 #endif
 #ifdef DS_SEND_GIMBAL_ANGLE
 	memset(ds_payload, 0, sizeof(ds_payload));

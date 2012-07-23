@@ -26,7 +26,7 @@
 
 static int16_t mag_data[3];
 
-static uint16_t mag_bearing;
+static int16_t mag_bearing;
 
 #define M_X 0
 #define M_Y 1
@@ -84,7 +84,7 @@ void mag_query(void) {
 	}
 }
 
-uint16_t mag_heading(void) {
+int16_t mag_heading(void) {
 	return mag_bearing;
 }
 

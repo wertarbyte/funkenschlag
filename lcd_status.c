@@ -111,9 +111,14 @@ static void lcd_status_draw(uint8_t row, enum lcd_status_line what) {
 #ifdef LCD_SHOW_MAG
 		case STATUS_LCD_MAG:
 			lcd_write(LCD_CHAR_ARROW_RIGHT);
-			lcd_fwrite("%3u", mag_heading()/10);
-			lcd_write(LCD_CHAR_DEGREES);
-			lcd_write_str("   ");
+			int16_t h = mag_heading();
+			if (h < 0) {
+				lcd_write_str("MAG ERR");
+			} else {
+				lcd_fwrite("%3d", mag_heading()/10);
+				lcd_write(LCD_CHAR_DEGREES);
+				lcd_write_str("   ");
+			}
 			break;
 #endif
 #ifdef LCD_SHOW_TIMER
