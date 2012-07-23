@@ -227,6 +227,7 @@ int main(void) {
 #endif
 #if defined(USE_MAG)
 		mag_query();
+		mag_dump();
 #endif
 #if defined(USE_ACC)
 		acc_query();
