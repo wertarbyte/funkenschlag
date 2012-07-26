@@ -19,6 +19,7 @@
 #include "mag.h"
 #include "acc.h"
 #include "lcd.h"
+#include "lcd_menu.h"
 #include "lcd_status.h"
 
 #define PPM_DDR  DDRB
@@ -261,14 +262,37 @@ int main(void) {
 		}
 
 #ifdef USE_LCD
-#if defined(MAG_CENTER_CALIBRATION_TRIGGER_INPUT)
-		if (mag_calib_time > millis) {
-			lcd_clear();
-			lcd_fwrite("MAGCALIB");
-		} else
+		static enum {
+			LCD_MODE_STATUS,
+#ifdef LCD_MENU
+			LCD_MODE_MENU,
 #endif
-		{
-			lcd_status_update();
+			LCD_MODE_CNT
+		} lcd_mode;
+
+		uint8_t lcd_mode_changed = 0;
+#ifdef LCD_MODE_SWITCH_INPUT
+		static int8_t old_sw_state = 0;
+		int8_t sw_state = get_input_scaled(LCD_MODE_SWITCH_INPUT, -1, 1);
+		if (old_sw_state != sw_state) {
+			lcd_mode += LCD_MODE_CNT;
+			lcd_mode += sw_state;
+			lcd_mode %= LCD_MODE_CNT;
+			old_sw_state = sw_state;
+			lcd_mode_changed = 1;
+		}
+#endif
+		switch (lcd_mode) {
+			case LCD_MODE_STATUS:
+				lcd_status_update(lcd_mode_changed);
+				break;
+#ifdef LCD_MENU
+			case LCD_MODE_MENU:
+				lcd_menu_update(lcd_mode_changed);
+				break;
+#endif
+			default:
+				break;
 		}
 #endif
 	}

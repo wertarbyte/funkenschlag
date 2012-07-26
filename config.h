@@ -63,8 +63,17 @@
 // display battery warning on top of LCD
 //#define LCD_SHOW_BATTERY_WARNING
 
-// use input device to control lcd
-//#define LCD_CTRL_SWITCH SRC_ID(SRC_SW, 4)
+// use input device to control lcd modes
+//#define LCD_MODE_SWITCH_INPUT SRC_ID(SRC_SW, 4)
+
+// input device to manually switch status displays
+//#define LCD_STATUS_SWITCH_INPUT SRC_ID(SRC_SW, 4)
+
+// add LCD config menu
+//#define LCD_MENU
+// input devices to control the LCD config menu
+//#define LCD_MENU_UPDOWN_INPUT SRC_ID(SRC_ADC, 1)
+//#define LCD_MENU_LEFTRIGHT_INPUT SRC_ID(SRC_ADC, 0)
 
 /* Datenschlag configuration */
 

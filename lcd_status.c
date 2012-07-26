@@ -143,22 +143,22 @@ static void lcd_status_battery(uint8_t row) {
 	}
 }
 
-void lcd_status_update(void) {
+void lcd_status_update(uint8_t reset) {
 #ifdef USE_LCD
 #define LCD_AUTO_SWITCH_INTERVAL 2000
 #define LCD_MANUAL_SWITCH_INTERVAL (3*(LCD_AUTO_SWITCH_INTERVAL))
 	static enum lcd_status_line status_lcd_state;
 	static uint32_t next_update;
-	if (millis < next_update) {
+	if (!reset && millis < next_update) {
 		return;
 	}
 	next_update = millis+100;
 
 	static uint32_t next_switch;
 
-#ifdef LCD_CTRL_SWITCH
+#ifdef LCD_STATUS_SWITCH_INPUT
 	static int8_t old_sw_state = 0;
-	int8_t sw_state = get_input_scaled(LCD_CTRL_SWITCH, -1, 1);
+	int8_t sw_state = get_input_scaled(LCD_STATUS_SWITCH_INPUT, -1, 1);
 	if (sw_state != old_sw_state && sw_state > 0) {
 		status_lcd_state++;
 		next_switch = millis+2*(LCD_AUTO_SWITCH_INTERVAL);
