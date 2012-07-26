@@ -17,9 +17,15 @@
 #include "config.h"
 
 #ifdef LCD_MENU
+
+extern volatile uint32_t millis;
+
+#define LCD_MAG_CALIBRATION_SEC 10
+
 static enum lcd_menu_t {
 	LCD_MENU_START,
 	LCD_MENU_MAG_CALIB,
+	LCD_MENU_MAG_CALIB_PROGRESS,
 	LCD_MENU_CNT
 } lcd_menu_state = LCD_MENU_START;
 
@@ -36,6 +42,15 @@ static void lcd_menu_switch(enum lcd_menu_t s) {
 			lcd_write_str("Calib");
 			lcd_set_cursor(1,0);
 			lcd_write_str("mag?");
+			break;
+		case LCD_MENU_MAG_CALIB_PROGRESS:
+			lcd_write_str("Spin me!");
+			lcd_set_cursor(1,0);
+			int8_t sec_left = (8L*mag_is_calibrating()/LCD_MAG_CALIBRATION_SEC)/1000L;
+			for (uint8_t i=0; i<(8-sec_left); i++) {
+				lcd_write('-');
+			}
+			lcd_write(LCD_CHAR_ARROW_RIGHT);
 			break;
 		default:
 			lcd_write_str("UNKNOWN");
@@ -57,7 +72,8 @@ static void lcd_menu_input(int8_t ud, int8_t lr) {
 		case LCD_MENU_MAG_CALIB:
 			switch(lr) {
 				case 1:
-					//mag_start_calibration();
+					mag_set_calibration( millis + LCD_MAG_CALIBRATION_SEC*1000L );
+					lcd_menu_switch(LCD_MENU_MAG_CALIB_PROGRESS);
 					break;
 			}
 
@@ -85,13 +101,17 @@ void lcd_menu_update(uint8_t reset) {
 	#define INPUT_RANGE 5
 	int8_t updown = input_deadzone( get_input_scaled( LCD_MENU_UPDOWN_INPUT, -INPUT_RANGE, INPUT_RANGE ), INPUT_RANGE/2 );
 	int8_t leftright = input_deadzone( get_input_scaled( LCD_MENU_LEFTRIGHT_INPUT, -INPUT_RANGE, INPUT_RANGE ), INPUT_RANGE/2);
-	if (reset) lcd_menu_switch(lcd_menu_state);
+	if (reset || lcd_refresh_timeout()) lcd_menu_switch(lcd_menu_state);
 	static uint8_t neutralized = 0;
 	if (updown == 0 && leftright == 0) {
 		neutralized = 1;
 	} else if (neutralized) {
 		neutralized = 0;
 		lcd_menu_input(updown, leftright);
+	}
+
+	if ((lcd_menu_state == LCD_MENU_MAG_CALIB_PROGRESS) && !mag_is_calibrating()) {
+		lcd_menu_switch(LCD_MENU_START);
 	}
 }
 

@@ -228,15 +228,13 @@ int main(void) {
 #endif
 #if defined(USE_MAG)
 #ifdef MAG_CENTER_CALIBRATION_TRIGGER_INPUT
-		static uint32_t mag_calib_time;
 		if (get_input_scaled( (MAG_CENTER_CALIBRATION_TRIGGER_INPUT), 1, -1) == (MAG_CENTER_CALIBRATION_TRIGGER_VALUE)) {
-			mag_calib_time = millis + 10*1000;
+			mag_set_calibration(millis + 10000L);
 		}
-		if (mag_calib_time > millis) {
-			mag_calibrate(0);
-		} else
 #endif
-		{
+		if (mag_is_calibrating()) {
+			mag_calibrate(0);
+		} else {
 			mag_calibrate(1);
 			mag_query();
 			mag_dump();

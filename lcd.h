@@ -108,3 +108,5 @@ void lcd_set_cursor(uint8_t c, uint8_t r);
 char lcd_get_bargraph(uint8_t);
 void lcd_create_crosshair(isrc_t xd, isrc_t yd, uint8_t slot);
 void lcd_create_bargraph(isrc_t bd, uint8_t slot);
+
+uint8_t lcd_refresh_timeout(void);

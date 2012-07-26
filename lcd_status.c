@@ -110,7 +110,11 @@ static void lcd_status_draw(uint8_t row, enum lcd_status_line what) {
 #endif
 #ifdef LCD_SHOW_MAG
 		case STATUS_LCD_MAG:
-			lcd_write(LCD_CHAR_ARROW_RIGHT);
+			if (mag_is_calibrating()) {
+				lcd_write((millis/1000 % 2) ? LCD_CHAR_ARROW_RIGHT : '-');
+			} else {
+				lcd_write(LCD_CHAR_ARROW_RIGHT);
+			}
 			int16_t h = mag_heading();
 			if (h < 0) {
 				lcd_write_str("MAG ERR");
@@ -148,11 +152,9 @@ void lcd_status_update(uint8_t reset) {
 #define LCD_AUTO_SWITCH_INTERVAL 2000
 #define LCD_MANUAL_SWITCH_INTERVAL (3*(LCD_AUTO_SWITCH_INTERVAL))
 	static enum lcd_status_line status_lcd_state;
-	static uint32_t next_update;
-	if (!reset && millis < next_update) {
+	if (!lcd_refresh_timeout() && !reset) {
 		return;
 	}
-	next_update = millis+100;
 
 	static uint32_t next_switch;
 

@@ -19,6 +19,8 @@
 static uint8_t _lcd_basic    = LCD_INSTRUCTION_SET_BASIC    | LCD_CONF;
 static uint8_t _lcd_extended = LCD_INSTRUCTION_SET_EXTENDED | LCD_CONF;
 
+extern uint32_t millis;
+
 static void lcd_send(uint8_t value, uint8_t mode) {
 	twi_write_reg(LCD_ADDR, mode, value);
 	_delay_us(30);
@@ -165,6 +167,16 @@ void lcd_fwrite(const char *format_string, ...) {
 	vsnprintf(str, sizeof(str), format_string, args);
 	va_end(args);
 	lcd_write_str(str);
+}
+
+uint8_t lcd_refresh_timeout(void) {
+	static uint32_t timeout = 0;
+	if (timeout < millis) {
+		timeout = millis + 50;
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 void lcd_splash(void) {

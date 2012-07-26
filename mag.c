@@ -24,9 +24,13 @@
 #define MAG_ORIENTATION(X, Y, Z)  {mag_data[M_X]  = -(X); mag_data[M_Y]  = -(Y); mag_data[M_Z]  = (Z);}
 #endif
 
+extern volatile uint32_t millis;
+
 static int16_t mag_data[3];
 static int16_t mag_zero[3];
 static float mag_cal[3] = { 1.0, 1.0, 1.0 };
+
+static uint32_t mag_cal_timeout;
 
 static int16_t mag_bearing;
 
@@ -47,6 +51,18 @@ static void mag_retrieve(void) {
 	MAG_ORIENTATION(buf[0]<<8 | buf[1],
 			buf[4]<<8 | buf[5],
 			buf[2]<<8 | buf[3]);
+}
+
+uint32_t mag_is_calibrating(void) {
+	if (mag_cal_timeout < millis) {
+		return 0;
+	} else {
+		return mag_cal_timeout - millis;
+	}
+}
+
+void mag_set_calibration(uint32_t timeout) {
+	mag_cal_timeout = timeout;
 }
 
 void mag_calibrate(uint8_t complete) {
