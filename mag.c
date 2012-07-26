@@ -39,6 +39,27 @@ void mag_init(void) {
 	twi_write_reg(MAG_ADDRESS, 0x02, 0x00);
 }
 
+
+float _atan2(float y, float x) {
+	#define fp_is_neg(val) ((((uint8_t*)&val)[3] & 0x80) != 0)
+	float z = y / x;
+	int16_t zi = abs((int16_t)(z * 100));
+	int8_t y_neg = fp_is_neg(y);
+	if ( zi < 100 ) {
+		if (zi > 10) {
+			z = z / (1.0f + 0.28f * z * z);
+		}
+		if (fp_is_neg(x)) {
+			if (y_neg) z -= M_PI;
+			else z += M_PI;
+		}
+	} else {
+		z = (M_PI / 2.0f) - z / (z * z + 0.28f);
+		if (y_neg) z -= M_PI;
+	}
+	return z;
+}
+
 void mag_query(void) {
 	uint8_t buf[6];
 	twi_start(MAG_ADDRESS<<1);
@@ -60,25 +81,12 @@ void mag_query(void) {
 #ifdef USE_ACC
 	float acc_data[3];
 	acc_get_scaled_data(acc_data);
-	float rollRadians = asin(acc_data[1]);
-	float pitchRadians = asin(acc_data[0]);
-	if (rollRadians > 0.78 || rollRadians < -0.78 || pitchRadians > 0.78 || pitchRadians < -0.78) {
-		mag_bearing = -1;
-		return;
-	}
-
-	float cosRoll = cos(rollRadians);
-	float sinRoll = sin(rollRadians);
-	float cosPitch = cos(pitchRadians);
-	float sinPitch = sin(pitchRadians);
-	float Xh = m_x * cosPitch + m_z * sinPitch;
-	float Yh = m_x * sinRoll * sinPitch + m_y * cosRoll - m_z * sinRoll * cosPitch;
-	float heading = atan2(Yh, Xh);
+	float heading = _atan2( acc_data[0] * m_z - acc_data[2] * m_x , acc_data[2] * m_y - acc_data[1] * acc_data[2] );
 #else
 	/* calculate compass bearing in deci-degrees */
 	float heading = atan2(m_y, m_x);
 #endif
-	mag_bearing = heading * 1800/M_PI;
+	mag_bearing = heading * 1800.0f/M_PI;
 	while (mag_bearing < 0) {
 		mag_bearing += 3600;
 	}
