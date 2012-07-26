@@ -25,6 +25,7 @@
 #endif
 
 static int16_t mag_data[3];
+static int16_t mag_zero[3];
 static float mag_cal[3] = { 1.0, 1.0, 1.0 };
 
 static int16_t mag_bearing;
@@ -46,6 +47,21 @@ static void mag_retrieve(void) {
 	MAG_ORIENTATION(buf[0]<<8 | buf[1],
 			buf[4]<<8 | buf[5],
 			buf[2]<<8 | buf[3]);
+}
+
+void mag_calibrate(uint8_t complete) {
+	static int16_t magZeroTempMin[3] = { INT16_MAX, INT16_MAX, INT16_MAX };
+	static int16_t magZeroTempMax[3] = { INT16_MIN, INT16_MIN, INT16_MIN };
+
+	for(uint8_t i=0; i<3; i++) {
+		if (complete) {
+			mag_zero[i] = (magZeroTempMin[i]+magZeroTempMax[i])/2;
+		} else {
+			mag_retrieve();
+			if (mag_data[i] < magZeroTempMin[i]) magZeroTempMin[i] = mag_data[i];
+			if (mag_data[i] > magZeroTempMax[i]) magZeroTempMax[i] = mag_data[i];
+		}
+	}
 }
 
 void mag_init(void) {
@@ -90,9 +106,9 @@ float _atan2(float y, float x) {
 void mag_query(void) {
 	mag_retrieve();
 
-	float m_x = mag_data[M_X]*mag_cal[M_X];
-	float m_y = mag_data[M_Y]*mag_cal[M_Y];
-	float m_z = mag_data[M_Z]*mag_cal[M_Z];
+	float m_x = mag_data[M_X]*mag_cal[M_X] - mag_zero[M_X];
+	float m_y = mag_data[M_Y]*mag_cal[M_Y] - mag_zero[M_Y];
+	float m_z = mag_data[M_Z]*mag_cal[M_Z] - mag_zero[M_Z];
 
 #ifdef USE_ACC
 	float acc_data[3];

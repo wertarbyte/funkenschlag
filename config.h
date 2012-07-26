@@ -23,6 +23,11 @@
 // enable I²C compass HMC5883
 //#define USE_MAG
 
+// trigger center calibration of MAG with input device
+//#define MAG_CENTER_CALIBRATION_TRIGGER_INPUT SRC_ID(SRC_SW,  0)
+// the input range is mapped from -1 to 1
+//#define MAG_CENTER_CALIBRATION_TRIGGER_VALUE 1
+
 // enable I²C accelerometer ADXL345
 //#define USE_ACC
 

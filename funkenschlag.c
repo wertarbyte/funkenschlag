@@ -226,8 +226,20 @@ int main(void) {
 		twi_adc_query();
 #endif
 #if defined(USE_MAG)
-		mag_query();
-		mag_dump();
+#ifdef MAG_CENTER_CALIBRATION_TRIGGER_INPUT
+		static uint32_t mag_calib_time;
+		if (get_input_scaled( (MAG_CENTER_CALIBRATION_TRIGGER_INPUT), 1, -1) == (MAG_CENTER_CALIBRATION_TRIGGER_VALUE)) {
+			mag_calib_time = millis + 10*1000;
+		}
+		if (mag_calib_time > millis) {
+			mag_calibrate(0);
+		} else
+#endif
+		{
+			mag_calibrate(1);
+			mag_query();
+			mag_dump();
+		}
 #endif
 #if defined(USE_ACC)
 		acc_query();
@@ -249,7 +261,15 @@ int main(void) {
 		}
 
 #ifdef USE_LCD
-		lcd_status_update();
+#if defined(MAG_CENTER_CALIBRATION_TRIGGER_INPUT)
+		if (mag_calib_time > millis) {
+			lcd_clear();
+			lcd_fwrite("MAGCALIB");
+		} else
+#endif
+		{
+			lcd_status_update();
+		}
 #endif
 	}
 	return 0;
