@@ -31,7 +31,7 @@ static int16_t acc_data[3];
 void acc_init(void) {
 	_delay_ms(10);
 	twi_write_reg(ACC_ADDRESS, 0x2D, 1<<3);
-	twi_write_reg(ACC_ADDRESS, 0x31, 0x08);
+	twi_write_reg(ACC_ADDRESS, 0x31, 0x0B);
 	twi_write_reg(ACC_ADDRESS, 0x2C, 0x09);
 }
 
@@ -52,7 +52,7 @@ void acc_query(void) {
 
 void acc_get_scaled_data(float scaled[3]) {
 	for (uint8_t i=0; i<3; i++) {
-		scaled[i] = (ACC_SCALE_FACTOR_2G) * acc_data[i];
+		scaled[i] = acc_data[i];
 	}
 }
 
