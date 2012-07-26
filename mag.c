@@ -25,6 +25,7 @@
 #endif
 
 static int16_t mag_data[3];
+static float mag_cal[3] = { 1.0, 1.0, 1.0 };
 
 static int16_t mag_bearing;
 
@@ -32,8 +33,34 @@ static int16_t mag_bearing;
 #define M_Y 1
 #define M_Z 2
 
+static void mag_retrieve(void) {
+	uint8_t buf[6];
+	twi_start(MAG_ADDRESS<<1);
+	twi_write(MAG_DATA_REGISTER);
+	twi_start(MAG_ADDRESS<<1 | 1);
+	for (uint8_t i=0; i<sizeof(buf); i++) {
+		buf[i] = twi_read(i<sizeof(buf)-1);
+	}
+	twi_stop();
+
+	MAG_ORIENTATION(buf[0]<<8 | buf[1],
+			buf[4]<<8 | buf[5],
+			buf[2]<<8 | buf[3]);
+}
+
 void mag_init(void) {
 	_delay_ms(100);
+	twi_write_reg(MAG_ADDRESS, 0x00, 0x71);
+	_delay_ms(50);
+	twi_write_reg(MAG_ADDRESS, 0x01, 0x60);
+	twi_write_reg(MAG_ADDRESS, 0x02, 0x01);
+	_delay_ms(100);
+	mag_retrieve();
+	_delay_ms(10);
+	float mag_scale[3] = { 1160.0, 1160.0, 1080 };
+	for (uint8_t i=0; i<3; i++) {
+		mag_cal[i]  =  mag_scale[i] / abs(mag_data[i]);
+	}
 	twi_write_reg(MAG_ADDRESS, 0x00, 0x70);
 	twi_write_reg(MAG_ADDRESS, 0x01, 0x20);
 	twi_write_reg(MAG_ADDRESS, 0x02, 0x00);
@@ -61,22 +88,11 @@ float _atan2(float y, float x) {
 }
 
 void mag_query(void) {
-	uint8_t buf[6];
-	twi_start(MAG_ADDRESS<<1);
-	twi_write(MAG_DATA_REGISTER);
-	twi_start(MAG_ADDRESS<<1 | 1);
-	for (uint8_t i=0; i<sizeof(buf); i++) {
-		buf[i] = twi_read(i<sizeof(buf)-1);
-	}
-	twi_stop();
+	mag_retrieve();
 
-	MAG_ORIENTATION(buf[0]<<8 | buf[1],
-			buf[4]<<8 | buf[5],
-			buf[2]<<8 | buf[3]);
-
-	float m_x = mag_data[M_X]*MAG_SCALE_FACTOR_13;
-	float m_y = mag_data[M_Y]*MAG_SCALE_FACTOR_13;
-	float m_z = mag_data[M_Z]*MAG_SCALE_FACTOR_13;
+	float m_x = mag_data[M_X]*mag_cal[M_X];
+	float m_y = mag_data[M_Y]*mag_cal[M_Y];
+	float m_z = mag_data[M_Z]*mag_cal[M_Z];
 
 #ifdef USE_ACC
 	float acc_data[3];
