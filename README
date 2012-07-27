@@ -35,7 +35,7 @@ to encode and transmit arbitrary binary data. This data stream can contain
 information about switch positions, magnetic bearing of the TX, additional
 servo commands for camera positioning or any other instruction for the vehicle.
 The receiver has to decode this data stream to obtain the instruction. My fork
-of the popular multirotor project Multiwii[1] contains such code so that e.g.
+of the popular multirotor project Multiwii[2] contains such code so that e.g.
 up to 8 AUX switches can be operated without the need for additional servo
 channels.
 
@@ -44,7 +44,8 @@ channels.
 My transmitter employs a PCF8591 I²C ADC chip to query additional analog
 inputs as well as an HMC5883 magnetometer to constantly measure the bearing of
 TX and pilot; this bearing can then be transmitted to the quadcopter (using
-Datenschlag) to adjust control commands if in HEADFREE mode.
+Datenschlag) to adjust control commands if in HEADFREE mode. For reliable
+compass measurements, an accelerometer is needed to provide tilt compensation.
 The TX status can be displayed on an alphanumeric I²C display; support for
 connecting a Wii nunchuk is also present, making it possible to control the
 system using the accelerometer and/or joystick.
@@ -67,6 +68,9 @@ Display:
 
 Magnetometer:
   * HMMC5883 (I²C)
+
+Accelerometer:
+  * ADXL345 (I²C)
 
 Additional input devices:
   * Wii Nunchuk Accelerometer and joystick (I²C)
