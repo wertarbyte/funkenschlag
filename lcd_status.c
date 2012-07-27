@@ -102,6 +102,7 @@ static void lcd_status_draw(uint8_t row, enum lcd_status_line what) {
 								break;
 							default:
 								lcd_write(' ');
+								break;
 						}
 					}
 				}
@@ -121,7 +122,6 @@ static void lcd_status_draw(uint8_t row, enum lcd_status_line what) {
 			} else {
 				lcd_fwrite("%3d", mag_heading()/10);
 				lcd_write(LCD_CHAR_DEGREES);
-				lcd_write_str("   ");
 			}
 			break;
 #endif
@@ -131,7 +131,7 @@ static void lcd_status_draw(uint8_t row, enum lcd_status_line what) {
 				uint8_t minutes = millis/1000/60;
 				uint8_t seconds = (millis/1000)%60;
 				lcd_write('\0');
-				lcd_fwrite("%2u:%02u  ", minutes, seconds);;
+				lcd_fwrite("%2u:%02u", minutes, seconds);;
 			}
 			break;
 #endif
@@ -155,6 +155,7 @@ void lcd_status_update(uint8_t reset) {
 	if (!lcd_refresh_timeout() && !reset) {
 		return;
 	}
+	lcd_clear();
 
 	static uint32_t next_switch;
 

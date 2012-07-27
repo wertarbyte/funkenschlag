@@ -134,7 +134,18 @@ static void lcd_char_demo(void) {
 }
 
 void lcd_clear(void) {
+#ifdef USE_LCD_CLEAR_CMD
 	lcd_cmd(LCD_CLEARDISPLAY);
+#else
+	/* doing it manually seems faster */
+	for (uint8_t l=0; l<2; l++) {
+		lcd_set_cursor(l,0);
+		for (uint8_t r=0; r<8; r++) {
+			lcd_write(' ');
+		}
+	}
+	lcd_set_cursor(0,0);
+#endif
 }
 
 void lcd_set_cursor(uint8_t l, uint8_t c) {

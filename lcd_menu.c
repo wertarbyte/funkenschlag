@@ -31,7 +31,6 @@ static enum lcd_menu_t {
 
 static void lcd_menu_switch(enum lcd_menu_t s) {
 	lcd_clear();
-	lcd_set_cursor(0,0);
 	switch (s) {
 		case LCD_MENU_START:
 			lcd_write_str("Funken-");
@@ -47,15 +46,16 @@ static void lcd_menu_switch(enum lcd_menu_t s) {
 			lcd_write_str("Spin me!");
 			lcd_set_cursor(1,0);
 			int8_t sec_left = (8L*mag_is_calibrating()/LCD_MAG_CALIBRATION_SEC)/1000L;
-			for (uint8_t i=0; i<(8-sec_left); i++) {
-				lcd_write('-');
+			int8_t p = 8-sec_left;
+			for (uint8_t i=0; i<8; i++) {
+				if (i == p) {
+					lcd_write(LCD_CHAR_ARROW_RIGHT);
+				} else if (i < p) {
+					lcd_write('-');
+				}
 			}
-			lcd_write(LCD_CHAR_ARROW_RIGHT);
 			break;
 		default:
-			lcd_write_str("UNKNOWN");
-			lcd_set_cursor(1,0);
-			lcd_write_str("MENU!");
 			return;
 	}
 	lcd_menu_state = s;
