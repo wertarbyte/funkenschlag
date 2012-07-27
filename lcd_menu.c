@@ -47,7 +47,8 @@ static void lcd_menu_switch(enum lcd_menu_t s) {
 			lcd_set_cursor(1,0);
 			int8_t sec_left = (8L*mag_is_calibrating()/LCD_MAG_CALIBRATION_SEC)/1000L;
 			int8_t p = 8-sec_left;
-			for (uint8_t i=0; i<8; i++) {
+			lcd_write(LCD_ICON_CLOCK);
+			for (uint8_t i=1; i<8; i++) {
 				if (i == p) {
 					lcd_write(LCD_CHAR_ARROW_RIGHT);
 				} else if (i < p) {

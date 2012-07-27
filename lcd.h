@@ -94,6 +94,8 @@
 #define LCD_CHAR_ARROW_RIGHT	0x7E
 #define LCD_CHAR_ARROW_LEFT	0x7F
 
+#define LCD_ICON_CLOCK		0x00
+
 void lcd_init(void);
 void lcd_splash(void);
 
