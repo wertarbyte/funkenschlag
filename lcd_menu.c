@@ -16,6 +16,10 @@
 #include "lcd_menu.h"
 #include "config.h"
 
+#ifndef USE_LCD
+#undef LCD_MENU
+#endif
+
 #ifdef LCD_MENU
 
 extern volatile uint32_t millis;
