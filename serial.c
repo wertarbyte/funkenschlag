@@ -67,7 +67,7 @@ void serial_fwrite(const char *format_string, ...) {
 	vsnprintf(str, sizeof(str), format_string, args);
 	va_end(args);
 	serial_write_str(str);
-};
+}
 
 void serial_write_str(const char *s) {
 	while (*s) {

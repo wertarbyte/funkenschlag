@@ -131,7 +131,7 @@ static void lcd_status_draw(uint8_t row, enum lcd_status_line what) {
 				uint8_t minutes = millis/1000/60;
 				uint8_t seconds = (millis/1000)%60;
 				lcd_write(LCD_ICON_CLOCK);
-				lcd_fwrite("%2u:%02u", minutes, seconds);;
+				lcd_fwrite("%2u:%02u", minutes, seconds);
 			}
 			break;
 #endif

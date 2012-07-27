@@ -12,6 +12,3 @@ isrc_t channel_source[] =
 
 #define N_CHANNELS (sizeof(channel_source)/sizeof(*channel_source))
 uint8_t channel_count = N_CHANNELS;
-
-
-
