@@ -109,7 +109,6 @@ void lcd_init(void) {
 	lcd_cmd(LCD_ENTRYMODESET | LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT);
 
 	lcd_clear();
-	_delay_ms(2);
 	lcd_cmd(LCD_RETURNHOME);
 
 #ifdef LCD_SHOW_CHANNELS
@@ -121,7 +120,6 @@ void lcd_init(void) {
 static void lcd_char_demo(void) {
 	for (uint8_t m=0; m<32; m++) {
 		lcd_clear();
-		_delay_ms(500);
 		lcd_set_cursor(0,0);
 		lcd_write('H');
 		lcd_write_uint(m);
@@ -136,6 +134,8 @@ static void lcd_char_demo(void) {
 void lcd_clear(void) {
 #ifdef USE_LCD_CLEAR_CMD
 	lcd_cmd(LCD_CLEARDISPLAY);
+	/* CLEARDISPLAY takes some time to process */
+	_delay_us(1500);
 #else
 	/* doing it manually seems faster */
 	for (uint8_t l=0; l<2; l++) {
