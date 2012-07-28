@@ -85,7 +85,11 @@ static void lcd_status_draw(uint8_t row, enum lcd_status_line what) {
 		case STATUS_LCD_SWITCHES:
 			{
 				uint8_t sw[] = DS_SEND_AUX_SWITCHES;
-				for (uint8_t i=0; i<sizeof(sw)/sizeof(sw[0]) && i<8; i++) {
+				for (uint8_t i=0; i<8; i++) {
+					if (i>=sizeof(sw)/sizeof(sw[0])) {
+						lcd_write(' ');
+						continue;
+					}
 					uint8_t n=sw[i];
 					if (n==0) {
 						lcd_write('_');
