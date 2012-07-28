@@ -5,6 +5,7 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <util/twi.h>
+#include <util/delay.h>
 #include "twi.h"
 #include "config.h"
 
@@ -12,14 +13,28 @@
 #define TWI_BITRATE 100000UL
 #endif
 
+uint16_t twi_error_cnt;
+
 void twi_init(void) {
 	TWSR = 0;
 	TWBR = (F_CPU / (TWI_BITRATE) - 16) / 2;
 	TWCR = 1<<TWEN;
+	twi_error_cnt = 0;
 }
 
-static void twi_wait(void) {
-	while (!(TWCR & (1<<TWINT)));
+static uint8_t twi_wait(void) {
+#ifdef TWI_TIMEOUT
+	uint8_t count = 255;
+#endif
+	while (!(TWCR & (1<<TWINT))) {
+#ifdef TWI_TIMEOUT
+		if (! --count) {
+			twi_error_cnt++;
+			return 1;
+		}
+#endif
+	}
+	return 0;
 }
 
 void twi_start(uint8_t addr) {
