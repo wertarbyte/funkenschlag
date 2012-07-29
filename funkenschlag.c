@@ -113,6 +113,19 @@ static void start_ppm_pulse(void) {
 	}
 }
 
+static void check_voltage(void) {
+	static uint32_t voltage_expire;
+	uint8_t voltage_down = !((~VOL_PIN) & 1<<VOL_BIT);
+	if (voltage_down) {
+		/* consider the voltage low for at least 200ms */
+		voltage_expire = millis + 200;
+		low_voltage = 1;
+	} else if (millis > voltage_expire) {
+		/* if the voltage is stable for >200ms, consider it stable */
+		low_voltage = 0;
+	}
+}
+
 int main(void) {
 	wdt_enable(WDTO_4S);
 	wdt_reset();
@@ -249,8 +262,7 @@ int main(void) {
 		nunchuk_query();
 #endif
 
-		/* check voltage */
-		low_voltage = !((~VOL_PIN) & 1<<VOL_BIT);
+		check_voltage();
 
 		/* switch LED */
 		if (!low_voltage || (millis/250 % 2)) {
