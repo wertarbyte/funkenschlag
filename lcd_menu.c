@@ -39,7 +39,7 @@ static void lcd_menu_switch(enum lcd_menu_t s) {
 		case LCD_MENU_START:
 			lcd_write_str("Funken-");
 			lcd_set_cursor(1,0);
-			lcd_write_str("schlag!");
+			lcd_write_str("conf?");
 			break;
 		case LCD_MENU_MAG_CALIB:
 			lcd_write_str("Calib");
